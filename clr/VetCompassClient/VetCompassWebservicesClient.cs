@@ -126,7 +126,7 @@ namespace VetCompass.Client
             SessionId = sessionId;
             Subject = subject;
             _sessionAddress = new Uri(vetcompassAddress + sessionId.ToString() + "/");
-
+            //todo:what about a web-based system, they would not want to create the session each time?
             CreateSession();
         }
 
