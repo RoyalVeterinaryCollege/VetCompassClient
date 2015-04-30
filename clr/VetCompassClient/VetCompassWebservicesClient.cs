@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Security.AccessControl;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace VetCompass.Client
 {
@@ -96,7 +99,7 @@ namespace VetCompass.Client
         private readonly Guid _clientId;
         private readonly string _sharedSecret;
         private readonly Uri _sessionAddress;
-        private Task<WebResponse> _runningTask;
+        private Task<WebResponse> _sessionCreationTask;
 
         /// <summary>
         /// Gets the unique session id
@@ -108,7 +111,14 @@ namespace VetCompass.Client
         /// </summary>
         public CodingSubject Subject { get; private set; }
 
-
+        /// <summary>
+        /// Instantiates the coding session object and starts a coding session with the VetCompass webservice
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="sharedSecret"></param>
+        /// <param name="sessionId"></param>
+        /// <param name="subject"></param>
+        /// <param name="vetcompassAddress"></param>
         public CodingSession(Guid clientId, string sharedSecret, Guid sessionId, CodingSubject subject, Uri vetcompassAddress)
         {
             _clientId = clientId;
@@ -116,23 +126,48 @@ namespace VetCompass.Client
             SessionId = sessionId;
             Subject = subject;
             _sessionAddress = new Uri(vetcompassAddress + sessionId.ToString() + "/");
+
+            CreateSession();
         }
 
-        public void Start()
+        private void CreateSession()
         {
+            //todo:time out
             var request = WebRequest.Create(_sessionAddress);
             request.ContentType = "string/json";
+            request.Method = "POST";
             var content = GetSubjectAsString();
             request.ContentLength = Encoding.UTF8.GetBytes(content).Length;
-            request.Method = "POST";
             var hmacHasher = new HMACRequestHasher();
             hmacHasher.HashRequest(request, _clientId, _sharedSecret);
-            _runningTask = request.GetResponseAsync();
+            _sessionCreationTask = request.GetResponseAsync();
+        }
+   
+        //todo queryexpression dto, ie skip/take, filters, etc
+        public QueryResponse QuerySynch(string queryExpression)
+        {
+            if(queryExpression == null) throw new ArgumentNullException("queryExpression");
+            var queryAsync = QueryAsync(queryExpression);
+            Task.WaitAny(queryAsync);
+            return queryAsync.Result;
         }
 
-        public QueryResponse Query(string queryExpression)
+        public Task<QueryResponse> QueryAsync(string queryExpression)
         {
-            throw new NotImplementedException();
+            if (queryExpression == null) throw new ArgumentNullException("queryExpression");
+            return _sessionCreationTask.ContinueWith(task => Query(queryExpression));
+        }
+
+        private QueryResponse Query(string queryExpression)
+        {
+            //todo:time out
+
+            var encoded = HttpUtility.HtmlEncode(queryExpression);
+            var request = WebRequest.Create(_sessionAddress + "/search/" + encoded);
+            request.ContentType = "string/json";
+            request.Method = "POST";
+            var content = GetSubjectAsString();
+            request.ContentLength = Encoding.UTF8.GetBytes(content).Length;
         }
 
         private string GetSubjectAsString()
