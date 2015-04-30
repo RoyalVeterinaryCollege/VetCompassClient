@@ -34,67 +34,16 @@ namespace VetCompass.Client
 
         public CodingSession StartCodingSession(CodingSubject subject)
         {
-            return StartCodingSession(subject, Guid.NewGuid());
+            return ResumeCodingSession(subject, Guid.NewGuid());
         }
 
-        public CodingSession StartCodingSession(CodingSubject subject, Guid sessionId)
+        public CodingSession ResumeCodingSession(CodingSubject subject, Guid sessionId)
         {
             return new CodingSession(_clientId, _sharedSecret, sessionId, subject, _vetcompassWebserviceBase);
         }
     }
 
-    /// <summary>
-    /// Represents the patient subject being coded
-    /// </summary>
-    public class CodingSubject
-    {
-        /// <summary>
-        /// Your system's unique identifier for the patient
-        /// </summary>
-        public string CaseNumber { get; set; }
-
-        /// <summary>
-        /// The VeNom Breed code of the patient if known
-        /// </summary>
-        public int? VeNomBreedCode { get; set; }
-
-        /// <summary>
-        /// The name of the breed in your system
-        /// </summary>
-        public string BreedName { get; set; }
-
-        /// <summary>
-        /// The VeNom Species code of the patient if known
-        /// </summary>
-        public int? VeNomSpeciesCode { get; set; }
-
-        /// <summary>
-        /// The name of the species in your system
-        /// </summary>
-        public string SpeciesName { get; set; }
-
-        /// <summary>
-        /// Is the patient female?  If false, then male
-        /// </summary>
-        public bool? IsFemale { get; set; }
-
-        /// <summary>
-        /// Has the patient been neutered?
-        /// </summary>
-        public bool? IsNeutered { get; set; }
-
-        /// <summary>
-        /// The approximated date of birth of the patient
-        /// </summary>
-        public DateTime? ApproximateDateOfBirth { get; set; }
-
-        /// <summary>
-        /// In the case of British patients, this is the postcode without the final two characters
-        /// </summary>
-        public string PartialPostCode { get; set; }
-    }
-
-    public class CodingSession  
+    public class CodingSession : ICodingSession
     {
         private readonly Guid _clientId;
         private readonly string _sharedSecret;
@@ -136,7 +85,7 @@ namespace VetCompass.Client
             var request = WebRequest.Create(_sessionAddress);
             request.ContentType = "string/json";
             request.Method = "POST";
-            var content = GetSubjectAsString();
+            var content = GetSubjectAsJsonString();
             request.ContentLength = Encoding.UTF8.GetBytes(content).Length;
             var hmacHasher = new HMACRequestHasher();
             hmacHasher.HashRequest(request, _clientId, _sharedSecret);
@@ -144,36 +93,90 @@ namespace VetCompass.Client
         }
    
         //todo queryexpression dto, ie skip/take, filters, etc
-        public QueryResponse QuerySynch(string queryExpression)
+        public QueryResponse QuerySynch(VeNomQuery query)
         {
-            if(queryExpression == null) throw new ArgumentNullException("queryExpression");
-            var queryAsync = QueryAsync(queryExpression);
+            var queryAsync = QueryAsync(query);
             Task.WaitAny(queryAsync);
             return queryAsync.Result;
         }
 
-        public Task<QueryResponse> QueryAsync(string queryExpression)
+        public Task<QueryResponse> QueryAsync(VeNomQuery query)
         {
-            if (queryExpression == null) throw new ArgumentNullException("queryExpression");
-            return _sessionCreationTask.ContinueWith(task => Query(queryExpression));
+            return _sessionCreationTask.ContinueWith(task => Query(query));
         }
 
-        private QueryResponse Query(string queryExpression)
+        private QueryResponse Query(VeNomQuery query)
         {
-            //todo:time out
-
-            var encoded = HttpUtility.HtmlEncode(queryExpression);
+            //todo:time outs
+            var encoded = HttpUtility.HtmlEncode(query.QueryExpression);
             var request = WebRequest.Create(_sessionAddress + "/search/" + encoded);
             request.ContentType = "string/json";
             request.Method = "POST";
-            var content = GetSubjectAsString();
+            var content = GetSubjectAsJsonString();
             request.ContentLength = Encoding.UTF8.GetBytes(content).Length;
+            var response = request.GetResponse();
+            return HandleReponse(response);
         }
 
-        private string GetSubjectAsString()
+        private QueryResponse HandleReponse(WebResponse response)
         {
             throw new NotImplementedException();
         }
+
+        private string GetSubjectAsJsonString()
+        {
+            //this avoids a dependency on a third part json library, or System.Runtime.Serialization by hardcoding the json serialisation
+            //feel free to replace this call with your own preferred serialisation library
+            return new SubjectSerialisor(Subject).ToJson();
+        }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <remarks>Use this interface to mock out your code for testing etc</remarks>
+    public interface ICodingSession
+    {
+        /// <summary>
+        /// Queries the web service synchronously
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        QueryResponse QuerySynch(VeNomQuery query);
+
+        /// <summary>
+        /// Queries the web service asynchronously
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        Task<QueryResponse> QueryAsync(VeNomQuery query);
+
+        /// <summary>
+        /// Gets the unique session id
+        /// </summary>
+        Guid SessionId { get; }
+
+        /// <summary>
+        /// Gets the subject of the coding session
+        /// </summary>
+        CodingSubject Subject { get; }
+    }
+
+    public class VeNomQuery 
+    {
+        public string QueryExpression { get; private set; }
+
+        public VeNomQuery(string queryExpression)
+        {
+            if(String.IsNullOrWhiteSpace(queryExpression)) throw new ArgumentNullException("queryExpression");
+            QueryExpression = queryExpression;
+        }
+
+        public int? Skip { get; set; } //defaults to 0 on server
+
+        public int? Take { get; set; } //defaults to 10 on server
+
+        public HashSet<int> FilterSet { get; set; } //defaults to all except 'Modelling'
     }
 
     public class QueryResponse  
