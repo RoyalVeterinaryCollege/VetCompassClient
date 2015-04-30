@@ -15,6 +15,8 @@ namespace ConsoleExample
         {
             var requestId = Guid.NewGuid();
             var clientId = Guid.NewGuid();
+            var x = new Uri("https://venomcoding.herokuapp.com/api/1.0/session/");
+            var y = x + "dfsdf";
 
             var request = WebRequest.Create("http://venomcoding.herokuapp.com/api/1.0/session/" + requestId);
             request.ContentType = "string/json";

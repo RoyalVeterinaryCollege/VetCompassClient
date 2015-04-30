@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VetCompassClient", "VetComp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleExample", "ConsoleExample\ConsoleExample.csproj", "{9C51362F-3BC1-4424-B20A-8270C23E9381}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VetCompassClient.Tests", "VetCompassClient.Tests\VetCompassClient.Tests.csproj", "{FDACBF3C-F493-4B2D-AC21-FD9AB7FB10D0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +21,10 @@ Global
 		{9C51362F-3BC1-4424-B20A-8270C23E9381}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9C51362F-3BC1-4424-B20A-8270C23E9381}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9C51362F-3BC1-4424-B20A-8270C23E9381}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDACBF3C-F493-4B2D-AC21-FD9AB7FB10D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDACBF3C-F493-4B2D-AC21-FD9AB7FB10D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDACBF3C-F493-4B2D-AC21-FD9AB7FB10D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDACBF3C-F493-4B2D-AC21-FD9AB7FB10D0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

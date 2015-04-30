@@ -42,9 +42,7 @@ namespace VetCompass.Client
         {
             SetDateHeader(request);
 
-            var bytes = Encoding.UTF8.GetBytes(sharedSecret);
-            string base64EncodedSharedSecretKey = Convert.ToBase64String(bytes);
-            byte[] sharedSecretKeyAsByteArray = Convert.FromBase64String(base64EncodedSharedSecretKey);
+            var sharedSecretKeyAsByteArray = ConvertToByteArray(sharedSecret);
 
             string unhashedSignature = MakeSignatureForHashing(request, clientId);
             byte[] byteEncoded = Encoding.UTF8.GetBytes(unhashedSignature);
@@ -55,6 +53,18 @@ namespace VetCompass.Client
             }
         }
 
+        private byte[] ConvertToByteArray(string sharedSecret)
+        {
+            var bytes = Encoding.UTF8.GetBytes(sharedSecret);
+            string base64EncodedSharedSecretKey = Convert.ToBase64String(bytes);
+            byte[] sharedSecretKeyAsByteArray = Convert.FromBase64String(base64EncodedSharedSecretKey);
+            return sharedSecretKeyAsByteArray;
+        }
+
+        /// <summary>
+        /// Sets the vetcompass reqesut date header
+        /// </summary>
+        /// <param name="request"></param>
         private void SetDateHeader(WebRequest request)
         {
             //storing the date the request was made reduces the window for replay attacks
