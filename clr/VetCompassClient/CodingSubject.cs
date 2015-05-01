@@ -5,7 +5,7 @@ namespace VetCompass.Client
     /// <summary>
     /// Represents the patient subject being coded
     /// </summary>
-    public class CodingSubject
+    public class CodingSubject : IEquatable<CodingSubject>
     {
         /// <summary>
         /// Your system's unique identifier for the patient
@@ -51,5 +51,14 @@ namespace VetCompass.Client
         /// In the case of British patients, this is the postcode without the final two characters
         /// </summary>
         public string PartialPostCode { get; set; }
+
+        public bool Equals(CodingSubject other)
+        {
+            return CaseNumber == other.CaseNumber && VeNomBreedCode == other.VeNomBreedCode &&
+                 BreedName == other.BreedName && VeNomSpeciesCode == other.VeNomSpeciesCode &&
+                 SpeciesName == other.SpeciesName
+                 && IsFemale == other.IsFemale && IsNeutered == other.IsNeutered &&
+                 ApproximateDateOfBirth == other.ApproximateDateOfBirth && PartialPostCode == other.PartialPostCode;
+        }
     }
 }

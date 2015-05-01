@@ -1,5 +1,11 @@
 using System;
+using System.CodeDom;
+using System.Collections.Generic;
+using System.Data.SqlClient;
+using System.Linq;
 using System.Text;
+using System.Web;
+using System.Web.Util;
 
 namespace VetCompass.Client
 {
@@ -27,16 +33,63 @@ namespace VetCompass.Client
 
             var sb = new StringBuilder();
             sb.Append("{");
-            
-            //todo:hm, this is a bit horrible, can it be refactored?
-            if (!String.IsNullOrWhiteSpace(_subject.CaseNumber)) sb.AppendFormat("{0}:{1}\n", "casenumber", _subject.CaseNumber);
-            if (!String.IsNullOrWhiteSpace(_subject.BreedName))  sb.AppendFormat("{0}:{1}\n", "breedname", _subject.BreedName);
-            if (!String.IsNullOrWhiteSpace(_subject.SpeciesName)) sb.AppendFormat("{0}:{1}\n", "speciesname", _subject.SpeciesName);
-            if (!String.IsNullOrWhiteSpace(_subject.SpeciesName)) sb.AppendFormat("{0}:{1}\n", "speciesname", _subject.SpeciesName);
 
-
+            var dispatcher = MakeDispatcher();
+            var properties = _subject.GetType().GetProperties();
+            foreach (var property in properties)
+            {
+                var value = property.GetValue(_subject);
+                if (value != null)
+                    dispatcher[property.PropertyType](value, sb, property.Name);
+            }
+               
             sb.Append("}");
             return sb.ToString();
+        }
+
+        private Dictionary<Type, Func<object,StringBuilder, string, StringBuilder>> MakeDispatcher()
+        {
+            var dispatcher = new Dictionary<Type, Func<object, StringBuilder, string, StringBuilder>>
+            {
+                {typeof (string), (value, sb, propertyName) =>      Write(value as string, sb, propertyName)},
+                {typeof (int?), (value, sb, propertyName) =>        Write(value as int?, sb, propertyName)},
+                {typeof (bool?), (value, sb, propertyName) =>       Write(value as bool?, sb, propertyName)},
+                {typeof (DateTime?), (value, sb, propertyName) =>   Write(value as DateTime?, sb, propertyName)}
+            };
+
+            return dispatcher;
+        } 
+
+      
+
+        StringBuilder Write(string value, StringBuilder sb, string propertyName)
+        {
+            if (!String.IsNullOrWhiteSpace(value)) sb.AppendFormat("\"{0}\": \"{1}\",\n", propertyName.ToLower(), value.Replace("\"","\\\""));
+            return sb;
+        }
+
+        StringBuilder Write(int? value, StringBuilder sb, string propertyName)
+        {
+            if (value != null) sb.AppendFormat("\"{0}\": {1},\n", propertyName.ToLower(), value);
+            return sb;
+        }
+
+        StringBuilder Write(bool? value, StringBuilder sb, string propertyName)
+        {
+            if (value != null)
+            {
+                sb.AppendFormat("\"{0}\": {1},\n", propertyName.ToLower(), value.Value ? "true" : "false");
+            }
+            return sb;
+        }
+
+        StringBuilder Write(DateTime? value, StringBuilder sb, string propertyName)
+        {
+            if (value != null)
+            {
+                sb.AppendFormat("\"{0}\": \"{1}\",\n", propertyName.ToLower(), value.Value.ToString("o")); 
+            }
+            return sb;
         }
     }
 }
