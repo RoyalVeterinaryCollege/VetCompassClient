@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
-using System.Security.AccessControl;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using Newtonsoft.Json;
@@ -22,15 +18,15 @@ namespace VetCompass.Client
         public VetCompassWebservicesClient()
         {
             //todo: get input from config
-            
         }
+
         public VetCompassWebservicesClient(Guid clientId, string sharedSecret, Uri vetcompassWebserviceBase)
         {
             _clientId = clientId;
             _sharedSecret = sharedSecret;
             var expectedFormatForUri = vetcompassWebserviceBase.ToString().EndsWith("/")
-              ? vetcompassWebserviceBase
-              : new Uri(vetcompassWebserviceBase + "/");
+                ? vetcompassWebserviceBase
+                : new Uri(vetcompassWebserviceBase + "/");
             _vetcompassWebserviceBase = expectedFormatForUri;
         }
 
@@ -48,29 +44,20 @@ namespace VetCompass.Client
     public class CodingSession : ICodingSession
     {
         private readonly Guid _clientId;
-        private readonly string _sharedSecret;
         private readonly Uri _sessionAddress;
+        private readonly string _sharedSecret;
         private Task<WebResponse> _sessionCreationTask;
+        private CookieContainer _cookies = new CookieContainer(); //this is how to share the session
 
         /// <summary>
-        /// Gets the unique session id
-        /// </summary>
-        public Guid SessionId { get; private set; }
-
-        /// <summary>
-        /// Gets the subject of the coding session
-        /// </summary>
-        public CodingSubject Subject { get; private set; }
-
-        /// <summary>
-        /// Instantiates the coding session object and starts a coding session with the VetCompass webservice
+        ///     Instantiates the coding session object and starts a coding session with the VetCompass webservice
         /// </summary>
         /// <param name="clientId"></param>
         /// <param name="sharedSecret"></param>
         /// <param name="sessionId"></param>
         /// <param name="subject"></param>
         /// <param name="vetcompassAddress"></param>
-        public CodingSession(Guid clientId, string sharedSecret, Guid sessionId, CodingSubject subject, Uri vetcompassAddress)
+        public CodingSession(Guid clientId, string sharedSecret, Guid sessionId, CodingSubject subject,Uri vetcompassAddress)
         {
             _clientId = clientId;
             _sharedSecret = sharedSecret;
@@ -81,26 +68,16 @@ namespace VetCompass.Client
             CreateSession();
         }
 
-        private void CreateSession()
-        {
-            //todo:time out
-            var request = WebRequest.Create(_sessionAddress);
-            request.ContentType = "application/json";
-            request.Method = WebRequestMethods.Http.Post; ;
-            var content = JsonConvert.SerializeObject(Subject);
-            var requestBytes = Encoding.UTF8.GetBytes(content);
-            request.ContentLength = requestBytes.Length;
-            
-            var hmacHasher = new HMACRequestHasher();
-            hmacHasher.HashRequest(request, _clientId, _sharedSecret);
-            using (var stream = request.GetRequestStream())
-            {
-                stream.Write(requestBytes,0,requestBytes.Length);
-            }
-            _sessionCreationTask = request.GetResponseAsync();
-        }
-   
-        //todo queryexpression dto, ie skip/take, filters, etc
+        /// <summary>
+        ///     Gets the unique session id
+        /// </summary>
+        public Guid SessionId { get; private set; }
+
+        /// <summary>
+        ///     Gets the subject of the coding session
+        /// </summary>
+        public CodingSubject Subject { get; private set; }
+
         public VeNomQueryResponse QuerySynch(VeNomQuery query)
         {
             var queryAsync = QueryAsync(query);
@@ -110,24 +87,47 @@ namespace VetCompass.Client
 
         public Task<VeNomQueryResponse> QueryAsync(VeNomQuery query)
         {
-            return _sessionCreationTask.ContinueWith(task => Query(query));
+            var queryTask = _sessionCreationTask.ContinueWith(task => Query(query));
+            return queryTask.Unwrap();
         }
 
-        private VeNomQueryResponse Query(VeNomQuery query)
+        private void CreateSession()
+        {
+            //todo:time out
+            
+            var request = (HttpWebRequest)WebRequest.Create(_sessionAddress);
+            request.CookieContainer = _cookies;
+            request.KeepAlive = true;  //keep the ssl connection open
+            request.ContentType = "application/json";
+            request.Method = WebRequestMethods.Http.Post;
+            var content = JsonConvert.SerializeObject(Subject);
+            var requestBytes = Encoding.UTF8.GetBytes(content);
+            request.ContentLength = requestBytes.Length;
+            //HMAC hash the request http://www.thebuzzmedia.com/designing-a-secure-rest-api-without-oauth-authentication/
+            var hmacHasher = new HMACRequestHasher();
+            hmacHasher.HashRequest(request, _clientId, _sharedSecret);
+            using (var stream = request.GetRequestStream())
+            {
+                stream.Write(requestBytes, 0, requestBytes.Length);
+            }
+            _sessionCreationTask = request.GetResponseAsync();
+        }
+
+        private Task<VeNomQueryResponse> Query(VeNomQuery query)
         {
             //todo:time outs
             var encoded = HttpUtility.UrlEncode(query.SearchExpression);
-            var request = WebRequest.Create(_sessionAddress + "search/" + encoded);
+            var request = (HttpWebRequest)WebRequest.Create(_sessionAddress + "search/" + encoded);
+            request.KeepAlive = true;
+            request.CookieContainer = _cookies;
             request.Method = WebRequestMethods.Http.Get;
-            request.Headers[HttpRequestHeader.Accept] = "application/json";
-            using (var response = request.GetResponse())
-            {
-                return DeserialiseQueryReponse(response);
-            }
+            request.Accept = "application/json";
+            var task = request.GetResponseAsync();
+            return task.ContinueWith(t => DeserialiseQueryReponse(t.Result));
         }
 
         /// <summary>
-        /// Deserialises the web service's query response
+        ///     Deserialises the web service's query response
         /// </summary>
         /// <param name="response"></param>
         /// <returns></returns>
@@ -145,81 +145,78 @@ namespace VetCompass.Client
     }
 
     /// <summary>
-    /// 
     /// </summary>
     /// <remarks>Use this interface to mock out your code for testing etc</remarks>
     public interface ICodingSession
     {
         /// <summary>
-        /// Queries the web service synchronously
+        ///     Gets the unique session id
+        /// </summary>
+        Guid SessionId { get; }
+
+        /// <summary>
+        ///     Gets the subject of the coding session
+        /// </summary>
+        CodingSubject Subject { get; }
+
+        /// <summary>
+        ///     Queries the web service synchronously
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
         VeNomQueryResponse QuerySynch(VeNomQuery query);
 
         /// <summary>
-        /// Queries the web service asynchronously
+        ///     Queries the web service asynchronously
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
         Task<VeNomQueryResponse> QueryAsync(VeNomQuery query);
-
-        /// <summary>
-        /// Gets the unique session id
-        /// </summary>
-        Guid SessionId { get; }
-
-        /// <summary>
-        /// Gets the subject of the coding session
-        /// </summary>
-        CodingSubject Subject { get; }
     }
 
-    public class VeNomQuery 
+    public class VeNomQuery
     {
         private string _searchExpression;
 
-        public string SearchExpression
-        {
-            get { return _searchExpression; }
-            set
-            {
-                if (String.IsNullOrWhiteSpace(value)) throw new ArgumentNullException("SearchExpression");
-                _searchExpression = value;
-            }
-        }
-
         [Obsolete("For serialisor only")]
-        public VeNomQuery() {} 
+        public VeNomQuery()
+        {
+        }
 
         public VeNomQuery(string searchExpression)
         {
             SearchExpression = searchExpression;
         }
 
+        public string SearchExpression
+        {
+            get { return _searchExpression; }
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value)) throw new ArgumentNullException("SearchExpression");
+                _searchExpression = value;
+            }
+        }
+
         public int? Skip { get; set; } //defaults to 0 on server
-
         public int? Take { get; set; } //defaults to 10 on server
-
         public HashSet<int> FilterSubset { get; set; } //defaults to all except 'Modelling'
     }
 
     /// <summary>
-    /// A dto representing the web-service's response to a session query
+    ///     A dto representing the web-service's response to a session query
     /// </summary>
-    public class VeNomQueryResponse  
+    public class VeNomQueryResponse
     {
-        public VeNomQuery Query { get; set; } 
-    
+        public VeNomQuery Query { get; set; }
         public List<VetCompassCode> Results { get; set; }
     }
-
 
 
     public class VetCompassCode
     {
         public int DataDictionaryId { get; set; }
         public string Name { get; set; }
-        public string Subset { get; set; } 
+        public string Subset { get; set; }
     }
 }
