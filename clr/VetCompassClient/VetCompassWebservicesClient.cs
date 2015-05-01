@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -28,8 +29,8 @@ namespace VetCompass.Client
             _clientId = clientId;
             _sharedSecret = sharedSecret;
             var expectedFormatForUri = vetcompassWebserviceBase.ToString().EndsWith("/")
-              ? _vetcompassWebserviceBase
-              : new Uri(_vetcompassWebserviceBase + "/");
+              ? vetcompassWebserviceBase
+              : new Uri(vetcompassWebserviceBase + "/");
             _vetcompassWebserviceBase = expectedFormatForUri;
         }
 
@@ -87,9 +88,15 @@ namespace VetCompass.Client
             request.ContentType = "string/json";
             request.Method = "POST";
             var content = JsonConvert.SerializeObject(Subject);
-            request.ContentLength = Encoding.UTF8.GetBytes(content).Length;
+            var requestBytes = Encoding.UTF8.GetBytes(content);
+            request.ContentLength = requestBytes.Length;
+            
             var hmacHasher = new HMACRequestHasher();
             hmacHasher.HashRequest(request, _clientId, _sharedSecret);
+            using (var stream = request.GetRequestStream())
+            {
+                stream.Write(requestBytes,0,requestBytes.Length);
+            }
             _sessionCreationTask = request.GetResponseAsync();
         }
    
@@ -110,17 +117,26 @@ namespace VetCompass.Client
         {
             //todo:time outs
             var encoded = HttpUtility.HtmlEncode(query.QueryExpression);
-            var request = WebRequest.Create(_sessionAddress + "/search/" + encoded);
+            var request = WebRequest.Create(_sessionAddress + "search/" + encoded);
             request.Method = "GET";
-            var content = "";
-            request.ContentLength = Encoding.UTF8.GetBytes(content).Length;
-            var response = request.GetResponse();
-            return HandleReponse(response);
+            return DeserialiseQueryReponse(request.GetResponse());
         }
 
-        private QueryResponse HandleReponse(WebResponse response)
+        /// <summary>
+        /// Deserialises the web service's query response
+        /// </summary>
+        /// <param name="response"></param>
+        /// <returns></returns>
+        private QueryResponse DeserialiseQueryReponse(WebResponse response)
         {
-            throw new NotImplementedException();
+            using (var stream = response.GetResponseStream())
+            {
+                using (var sr = new StreamReader(stream, Encoding.UTF8))
+                {
+                    var responseContent = sr.ReadToEnd();
+                    return JsonConvert.DeserializeObject<QueryResponse>(responseContent);
+                }
+            }
         }
     }
 
@@ -172,7 +188,24 @@ namespace VetCompass.Client
         public HashSet<int> FilterSet { get; set; } //defaults to all except 'Modelling'
     }
 
+    /// <summary>
+    /// A dto representing the web-service's response to a session query
+    /// </summary>
     public class QueryResponse  
     {
+        public string QueryExpression { get; set; }
+        public int Skip { get; set; }
+        public int Take { get; set; }
+        public HashSet<int> FilterSubset { get; set; }
+        public List<VetCompassCode> Results { get; set; }
+
+
+    }
+
+    public class VetCompassCode
+    {
+        public int DataDictionaryId { get; set; }
+        public string Name { get; set; }
+        public string Subset { get; set; } 
     }
 }
