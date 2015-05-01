@@ -5,7 +5,6 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
-using System.Web.Management;
 using Newtonsoft.Json;
 
 namespace VetCompass.Client
@@ -199,8 +198,21 @@ namespace VetCompass.Client
             }
         }
 
-        public int? Skip { get; set; } //defaults to 0 on server
+        /// <summary>
+        /// How many hits to skip at the beginning of the results.
+        /// </summary>
+        /// <remarks>defaults to 0 on server</remarks>
+        public int? Skip { get; set; } 
+       
+        /// <summary>
+        /// How many hits to take 
+        /// </summary>
+        /// <remarks>Defaults to 10 on the server.  Min = 0, Max = 100</remarks>
         public int? Take { get; set; } //defaults to 10 on server
+        
+        /// <summary>
+        /// The subsets to filter the results by
+        /// </summary>
         public HashSet<int> FilterSubset { get; set; } //defaults to all except 'Modelling'
     }
 
@@ -209,13 +221,23 @@ namespace VetCompass.Client
     /// </summary>
     public class VeNomQueryResponse
     {
+        /// <summary>
+        /// The original query request
+        /// </summary>
         public VeNomQuery Query { get; set; }
+
+        /// <summary>
+        /// The matches found for the query
+        /// </summary>
         public List<VetCompassCode> Results { get; set; }
     }
 
-
+    /// <summary>
+    /// A dto representing a code in VetCompass
+    /// </summary>
     public class VetCompassCode
     {
+        //todo:rename to VeNomId?
         public int DataDictionaryId { get; set; }
         public string Name { get; set; }
         public string Subset { get; set; }

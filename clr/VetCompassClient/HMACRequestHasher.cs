@@ -5,6 +5,9 @@ using System.Text;
 
 namespace VetCompass.Client
 {
+    /// <summary>
+    /// This class prepares the webrequest for making the HMAC call 
+    /// </summary>
     public class HMACRequestHasher
     {
         /// <summary>
