@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using Newtonsoft.Json;
 
 namespace VetCompass.Client
 {
@@ -85,7 +86,7 @@ namespace VetCompass.Client
             var request = WebRequest.Create(_sessionAddress);
             request.ContentType = "string/json";
             request.Method = "POST";
-            var content = GetSubjectAsJsonString();
+            var content = JsonConvert.SerializeObject(Subject);
             request.ContentLength = Encoding.UTF8.GetBytes(content).Length;
             var hmacHasher = new HMACRequestHasher();
             hmacHasher.HashRequest(request, _clientId, _sharedSecret);
@@ -110,9 +111,8 @@ namespace VetCompass.Client
             //todo:time outs
             var encoded = HttpUtility.HtmlEncode(query.QueryExpression);
             var request = WebRequest.Create(_sessionAddress + "/search/" + encoded);
-            request.ContentType = "string/json";
-            request.Method = "POST";
-            var content = GetSubjectAsJsonString();
+            request.Method = "GET";
+            var content = "";
             request.ContentLength = Encoding.UTF8.GetBytes(content).Length;
             var response = request.GetResponse();
             return HandleReponse(response);
@@ -121,13 +121,6 @@ namespace VetCompass.Client
         private QueryResponse HandleReponse(WebResponse response)
         {
             throw new NotImplementedException();
-        }
-
-        private string GetSubjectAsJsonString()
-        {
-            //this avoids a dependency on a third part json library, or System.Runtime.Serialization by hardcoding the json serialisation
-            //feel free to replace this call with your own preferred serialisation library
-            return new SubjectSerialisor(Subject).ToJson();
         }
     }
 
