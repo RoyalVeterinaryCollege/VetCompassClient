@@ -15,7 +15,7 @@ namespace WindowsFormsExample
 
             var client = new VetCompassWebservicesClient(Guid.NewGuid(), "not very secret", new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
             _session = client.StartCodingSession(new CodingSubject { CaseNumber = "winforms testing case" });
-            lstBox.DisplayMember = "Name";
+            lstBox.DisplayMember = "Name";  
         }
 
         private void txtQuery_KeyUp(object sender, KeyEventArgs e)
@@ -27,16 +27,16 @@ namespace WindowsFormsExample
                 lstBox.DisplayMember = "Name";
                 return; 
             }
-            //call asynchronously to the webservice, to keep the UI responsive
+            //call asynchronously to the webservice, to keep the UI responsive but..
             var task = _session.QueryAsync(new VeNomQuery(text)); 
-            //in a winforms/wpf app you will need to synchronise the UI update on the UI thread
+            //..in a winforms/wpf app you will need to do the UI update on the UI thread
             //this is done using the TaskScheduler.FromCurrentSynchronizationContext() call
             task.ContinueWith(t => BindResults(t.Result), TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         private void BindResults(VeNomQueryResponse result)
         {
-            if (txtQuery.Text != result.Query.SearchExpression) return; //guard against multiple queries in quick succession
+            if (txtQuery.Text != result.Query.SearchExpression) return; //guard against multiple queries in quick succession coming out of order
             lstBox.DisplayMember = "Name";
             lstBox.DataSource = result.Results;
         }
