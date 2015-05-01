@@ -16,8 +16,10 @@ namespace ConsoleExample
 
             var client = new VetCompassWebservicesClient(Guid.NewGuid(), "not very secret", new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
             var session = client.StartCodingSession(new CodingSubject {CaseNumber = "noel's testing case"});
-            var results = session.QuerySynch(new VeNomQuery("rta"));
 
+            var query = session.QueryAsync(new VeNomQuery("rta"));
+            Task.WaitAll(query);
+           
 
         }
     }

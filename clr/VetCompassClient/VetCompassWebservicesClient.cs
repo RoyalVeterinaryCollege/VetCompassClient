@@ -85,8 +85,8 @@ namespace VetCompass.Client
         {
             //todo:time out
             var request = WebRequest.Create(_sessionAddress);
-            request.ContentType = "string/json";
-            request.Method = "POST";
+            request.ContentType = "application/json";
+            request.Method = WebRequestMethods.Http.Post; ;
             var content = JsonConvert.SerializeObject(Subject);
             var requestBytes = Encoding.UTF8.GetBytes(content);
             request.ContentLength = requestBytes.Length;
@@ -101,25 +101,29 @@ namespace VetCompass.Client
         }
    
         //todo queryexpression dto, ie skip/take, filters, etc
-        public QueryResponse QuerySynch(VeNomQuery query)
+        public VeNomQueryResponse QuerySynch(VeNomQuery query)
         {
             var queryAsync = QueryAsync(query);
             Task.WaitAny(queryAsync);
             return queryAsync.Result;
         }
 
-        public Task<QueryResponse> QueryAsync(VeNomQuery query)
+        public Task<VeNomQueryResponse> QueryAsync(VeNomQuery query)
         {
             return _sessionCreationTask.ContinueWith(task => Query(query));
         }
 
-        private QueryResponse Query(VeNomQuery query)
+        private VeNomQueryResponse Query(VeNomQuery query)
         {
             //todo:time outs
-            var encoded = HttpUtility.HtmlEncode(query.QueryExpression);
+            var encoded = HttpUtility.UrlEncode(query.SearchExpression);
             var request = WebRequest.Create(_sessionAddress + "search/" + encoded);
-            request.Method = "GET";
-            return DeserialiseQueryReponse(request.GetResponse());
+            request.Method = WebRequestMethods.Http.Get;
+            request.Headers[HttpRequestHeader.Accept] = "application/json";
+            using (var response = request.GetResponse())
+            {
+                return DeserialiseQueryReponse(response);
+            }
         }
 
         /// <summary>
@@ -127,14 +131,14 @@ namespace VetCompass.Client
         /// </summary>
         /// <param name="response"></param>
         /// <returns></returns>
-        private QueryResponse DeserialiseQueryReponse(WebResponse response)
+        private VeNomQueryResponse DeserialiseQueryReponse(WebResponse response)
         {
             using (var stream = response.GetResponseStream())
             {
                 using (var sr = new StreamReader(stream, Encoding.UTF8))
                 {
                     var responseContent = sr.ReadToEnd();
-                    return JsonConvert.DeserializeObject<QueryResponse>(responseContent);
+                    return JsonConvert.DeserializeObject<VeNomQueryResponse>(responseContent);
                 }
             }
         }
@@ -151,14 +155,14 @@ namespace VetCompass.Client
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        QueryResponse QuerySynch(VeNomQuery query);
+        VeNomQueryResponse QuerySynch(VeNomQuery query);
 
         /// <summary>
         /// Queries the web service asynchronously
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
-        Task<QueryResponse> QueryAsync(VeNomQuery query);
+        Task<VeNomQueryResponse> QueryAsync(VeNomQuery query);
 
         /// <summary>
         /// Gets the unique session id
@@ -173,34 +177,44 @@ namespace VetCompass.Client
 
     public class VeNomQuery 
     {
-        public string QueryExpression { get; private set; }
+        private string _searchExpression;
 
-        public VeNomQuery(string queryExpression)
+        public string SearchExpression
         {
-            if(String.IsNullOrWhiteSpace(queryExpression)) throw new ArgumentNullException("queryExpression");
-            QueryExpression = queryExpression;
+            get { return _searchExpression; }
+            set
+            {
+                if (String.IsNullOrWhiteSpace(value)) throw new ArgumentNullException("SearchExpression");
+                _searchExpression = value;
+            }
+        }
+
+        [Obsolete("For serialisor only")]
+        public VeNomQuery() {} 
+
+        public VeNomQuery(string searchExpression)
+        {
+            SearchExpression = searchExpression;
         }
 
         public int? Skip { get; set; } //defaults to 0 on server
 
         public int? Take { get; set; } //defaults to 10 on server
 
-        public HashSet<int> FilterSet { get; set; } //defaults to all except 'Modelling'
+        public HashSet<int> FilterSubset { get; set; } //defaults to all except 'Modelling'
     }
 
     /// <summary>
     /// A dto representing the web-service's response to a session query
     /// </summary>
-    public class QueryResponse  
+    public class VeNomQueryResponse  
     {
-        public string QueryExpression { get; set; }
-        public int Skip { get; set; }
-        public int Take { get; set; }
-        public HashSet<int> FilterSubset { get; set; }
+        public VeNomQuery Query { get; set; } 
+    
         public List<VetCompassCode> Results { get; set; }
-
-
     }
+
+
 
     public class VetCompassCode
     {
