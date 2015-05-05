@@ -17,14 +17,19 @@ namespace VetCompass.Client
         /// </summary>
         /// <param name="request"></param>
         /// <param name="clientId"></param>
+        /// <param name="requestBody"></param>
         /// <returns></returns>
-        public string MakeSignatureForHashing(WebRequest request, Guid clientId)
+        public string MakeSignatureForHashing(WebRequest request, Guid clientId, string requestBody)
         {
-            //todo: I think this needs to hash the body as well?
             const string sep = "\n";
             var requestDate = request.Headers.Get(Constants.VetCompass_Date_Header);
-            return request.Method + sep + clientId + request.ContentLength + sep + request.ContentType + sep +
-                   requestDate;
+            return 
+                request.Method          + sep + 
+                clientId                + sep + 
+                request.ContentLength   + sep + 
+                request.ContentType     + sep +
+                requestDate             + sep + 
+                requestBody;
         }
 
         /// <summary>
@@ -33,11 +38,11 @@ namespace VetCompass.Client
         /// <param name="request"></param>
         /// <param name="clientId"></param>
         /// <param name="sharedSecret"></param>
-        public void HashRequest(WebRequest request, Guid clientId, string sharedSecret)
+        public void HashRequest(WebRequest request, Guid clientId, string sharedSecret, string requestBody)
         {
             var sharedSecretKeyAsByteArray = ConvertToByteArray(sharedSecret);
 
-            var unhashedSignature = MakeSignatureForHashing(request, clientId);
+            var unhashedSignature = MakeSignatureForHashing(request, clientId, requestBody);
             var byteEncoded = Encoding.UTF8.GetBytes(unhashedSignature);
             using (var hasher = new HMACSHA256(sharedSecretKeyAsByteArray))
             {

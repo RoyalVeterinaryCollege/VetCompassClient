@@ -7,7 +7,7 @@ namespace WindowsFormsExample
 {
     public partial class Form1 : Form
     {
-        readonly CodingSession _session;
+        readonly ICodingSession _session;
 
         public Form1()
         {

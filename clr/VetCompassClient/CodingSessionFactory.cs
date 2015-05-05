@@ -25,6 +25,9 @@ namespace VetCompass.Client
         ICodingSession ResumeCodingSession(CodingSubject subject, Guid sessionId);
     }
 
+    /// <summary>
+    /// A factory for starting or resuming clinical coding sessions with the VetCompass clinical coding web service.  Thread safe.
+    /// </summary>
     public class CodingSessionFactory : ICodingSessionFactory
     {
         private readonly Guid _clientId;

@@ -8,6 +8,9 @@ using Newtonsoft.Json;
 
 namespace VetCompass.Client
 {
+    /// <summary>
+    /// Handles calls to the VetCompass clinical coding web service.  ThreadSafe.
+    /// </summary>
     public class CodingSession : ICodingSession
     {
         private readonly Guid _clientId;
@@ -71,7 +74,7 @@ namespace VetCompass.Client
            
             //HMAC hash the request
             var hmacHasher = new HMACRequestHasher();
-            hmacHasher.HashRequest(request, _clientId, _sharedSecret);
+            hmacHasher.HashRequest(request, _clientId, _sharedSecret, content);
             using (var stream = request.GetRequestStream())
             {
                 stream.Write(requestBytes, 0, requestBytes.Length);
