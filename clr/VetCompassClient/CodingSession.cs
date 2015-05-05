@@ -12,10 +12,10 @@ namespace VetCompass.Client
     {
         private readonly Guid _clientId;
         private readonly CookieContainer _cookies = new CookieContainer(); //this is how to share the session
-        private Uri _sessionAddress;
         private readonly string _sharedSecret;
-        private Task _sessionCreationTask;
         private readonly Uri _vetcompassAddress;
+        private Uri _sessionAddress;
+        private Task _sessionCreationTask;
 
         /// <summary>
         ///     Instantiates a coding session object
@@ -30,41 +30,6 @@ namespace VetCompass.Client
             _clientId = clientId;
             _sharedSecret = sharedSecret;
             Subject = subject;
-        }
-
-        /// <summary>
-        /// Creates a new coding session on the webservice
-        /// </summary>
-        public void Start()
-        {
-            SessionId = Guid.NewGuid();
-            _sessionAddress = new Uri(_vetcompassAddress + SessionId.ToString() + "/");
-            var request = CreateRequest(_sessionAddress);
-            request.ContentType = "application/json";
-            request.Method = WebRequestMethods.Http.Post;
-            var content = JsonConvert.SerializeObject(Subject);
-            var requestBytes = Encoding.UTF8.GetBytes(content);
-            request.ContentLength = requestBytes.Length;
-            //HMAC hash the request http://www.thebuzzmedia.com/designing-a-secure-rest-api-without-oauth-authentication/
-            var hmacHasher = new HMACRequestHasher();
-            hmacHasher.HashRequest(request, _clientId, _sharedSecret);
-            using (var stream = request.GetRequestStream())
-            {
-                stream.Write(requestBytes, 0, requestBytes.Length);
-            }
-            _sessionCreationTask = request.GetResponseAsync();
-        }
-
-        /// <summary>
-        /// Configures this CodingSession to use a already created session
-        /// </summary>
-        /// <param name="sessionId"></param>
-        public void Resume(Guid sessionId)
-        {
-            SessionId = sessionId;
-            _sessionAddress = new Uri(_vetcompassAddress + sessionId.ToString() + "/");
-            //no call required to web service, but set up a no-op task to continue from
-            _sessionCreationTask = Task.FromResult(0);
         }
 
         /// <summary>
@@ -90,7 +55,41 @@ namespace VetCompass.Client
             return queryTask.Unwrap();
         }
 
-      
+        /// <summary>
+        ///     Creates a new coding session on the webservice
+        /// </summary>
+        public void Start()
+        {
+            SessionId = Guid.NewGuid();
+            _sessionAddress = new Uri(_vetcompassAddress + SessionId.ToString() + "/");
+            var request = CreateRequest(_sessionAddress);
+            request.ContentType = "application/json";
+            request.Method = WebRequestMethods.Http.Post;
+            var content = JsonConvert.SerializeObject(Subject);
+            var requestBytes = Encoding.UTF8.GetBytes(content);
+            request.ContentLength = requestBytes.Length;
+           
+            //HMAC hash the request
+            var hmacHasher = new HMACRequestHasher();
+            hmacHasher.HashRequest(request, _clientId, _sharedSecret);
+            using (var stream = request.GetRequestStream())
+            {
+                stream.Write(requestBytes, 0, requestBytes.Length);
+            }
+            _sessionCreationTask = request.GetResponseAsync(); //todo:Error handling
+        }
+
+        /// <summary>
+        ///     Configures this CodingSession to use a already created session
+        /// </summary>
+        /// <param name="sessionId"></param>
+        public void Resume(Guid sessionId)
+        {
+            SessionId = sessionId;
+            _sessionAddress = new Uri(_vetcompassAddress + sessionId.ToString() + "/");
+            //no call required to web service, but set up a no-op task to continue from
+            _sessionCreationTask = Task.FromResult(0);
+        }
 
         /// <summary>
         ///     Creates a HttpWebRequest to the uri and prepares all the common code
@@ -103,7 +102,20 @@ namespace VetCompass.Client
             var request = (HttpWebRequest) WebRequest.Create(uri);
             request.KeepAlive = true;
             request.CookieContainer = _cookies;
+            SetDateHeader(request);
             return request;
+        }
+
+        /// <summary>
+        ///     Sets the vetcompass request date header
+        /// </summary>
+        /// <param name="request"></param>
+        private void SetDateHeader(WebRequest request)
+        {
+            //storing the date the request was made reduces the window for replay attacks
+            //http://stackoverflow.com/questions/44391/how-do-i-prevent-replay-attacks
+            var date = DateTime.UtcNow.ToString("o"); //date format = ISO 8601, http://en.wikipedia.org/wiki/ISO_8601
+            request.Headers.Add(Constants.VetCompass_Date_Header, date);
         }
 
         private Task<VeNomQueryResponse> Query(VeNomQuery query)
@@ -162,5 +174,16 @@ namespace VetCompass.Client
         /// <param name="query"></param>
         /// <returns></returns>
         Task<VeNomQueryResponse> QueryAsync(VeNomQuery query);
+
+        /// <summary>
+        ///     Creates a new coding session on the webservice
+        /// </summary>
+        void Start();
+
+        /// <summary>
+        ///     Configures this CodingSession to use a already created session
+        /// </summary>
+        /// <param name="sessionId"></param>
+        void Resume(Guid sessionId);
     }
 }

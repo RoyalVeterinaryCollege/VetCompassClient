@@ -67,9 +67,10 @@
   <ItemGroup>
     <Compile Include="CodingSession.cs" />
     <Compile Include="CodingSubject.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="HMACRequestHasher.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="VetCompassWebservicesClient.cs" />
+    <Compile Include="CodingSessionFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />

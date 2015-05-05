@@ -18,7 +18,7 @@ namespace ConsoleExample
 
         void ThroughPutTest()
         {
-            var client = new VetCompassWebservicesClient(Guid.NewGuid(), "not very secret", new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
+            var client = new CodingSessionFactory(Guid.NewGuid(), "not very secret", new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
             var session = client.StartCodingSession(new CodingSubject { CaseNumber = "noel's testing case" });
             var start = DateTime.Now;
             var results = new List<Task<VeNomQueryResponse>>();

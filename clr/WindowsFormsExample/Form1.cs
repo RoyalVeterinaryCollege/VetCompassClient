@@ -13,7 +13,7 @@ namespace WindowsFormsExample
         {
             InitializeComponent();
 
-            var client = new VetCompassWebservicesClient(Guid.NewGuid(), "not very secret", new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
+            var client = new CodingSessionFactory(Guid.NewGuid(), "not very secret", new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
             _session = client.StartCodingSession(new CodingSubject { CaseNumber = "winforms testing case" });
             lstBox.DisplayMember = "Name";  
         }

@@ -3,18 +3,40 @@ using System.Collections.Generic;
 
 namespace VetCompass.Client
 {
-    public class VetCompassWebservicesClient
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <remarks>Interface allows testing / mocking etc</remarks>
+    public interface ICodingSessionFactory
+    {
+        /// <summary>
+        /// Starts a new coding session which is registered on the web service
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <returns></returns>
+        ICodingSession StartCodingSession(CodingSubject subject);
+
+        /// <summary>
+        /// Resumes a pre-registered coding session.  This assumes a session with that sessionId has been started with a previous call
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="sessionId"></param>
+        /// <returns></returns>
+        ICodingSession ResumeCodingSession(CodingSubject subject, Guid sessionId);
+    }
+
+    public class CodingSessionFactory : ICodingSessionFactory
     {
         private readonly Guid _clientId;
         private readonly string _sharedSecret;
         private readonly Uri _vetcompassWebserviceBase;
 
-        public VetCompassWebservicesClient()
+        public CodingSessionFactory()
         {
             //todo: get input from config
         }
 
-        public VetCompassWebservicesClient(Guid clientId, string sharedSecret, Uri vetcompassWebserviceBase)
+        public CodingSessionFactory(Guid clientId, string sharedSecret, Uri vetcompassWebserviceBase)
         {
             _clientId = clientId;
             _sharedSecret = sharedSecret;
@@ -24,14 +46,14 @@ namespace VetCompass.Client
             _vetcompassWebserviceBase = expectedFormatForUri;
         }
 
-        public CodingSession StartCodingSession(CodingSubject subject)
+        public ICodingSession StartCodingSession(CodingSubject subject)
         {
             var session =  new CodingSession(_clientId, _sharedSecret, subject, _vetcompassWebserviceBase);
             session.Start();
             return session;
         }
 
-        public CodingSession ResumeCodingSession(CodingSubject subject, Guid sessionId)
+        public ICodingSession ResumeCodingSession(CodingSubject subject, Guid sessionId)
         {
             var session =  new CodingSession(_clientId, _sharedSecret, subject, _vetcompassWebserviceBase);
             session.Resume(sessionId);
@@ -39,6 +61,9 @@ namespace VetCompass.Client
         }
     }
 
+    /// <summary>
+    /// A DTO representing a VeNom query
+    /// </summary>
     public class VeNomQuery
     {
         private string _searchExpression;
