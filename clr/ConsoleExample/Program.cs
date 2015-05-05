@@ -13,7 +13,7 @@ namespace ConsoleExample
     {
         static void Main(string[] args)
         {
-            
+            var x = CreateServiceClientKey();
         }
 
         void ThroughPutTest()
@@ -32,6 +32,24 @@ namespace ConsoleExample
 
             Console.WriteLine(DateTime.Now - start);
             Console.ReadKey();
+        }
+
+        public static string CreateServiceClientKey()
+        {
+            SymmetricAlgorithm symAlg = SymmetricAlgorithm.Create("Rijndael");
+
+            symAlg.KeySize = 128;
+
+            byte[] key = symAlg.Key;
+
+            StringBuilder sb = new StringBuilder(key.Length * 2);
+
+            foreach (byte b in key)
+            {
+                sb.AppendFormat("{0:x2}", b);
+            }
+
+            return sb.ToString();
         }
     }
 }
