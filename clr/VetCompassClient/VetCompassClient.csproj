@@ -65,6 +65,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CodingSession.cs" />
     <Compile Include="CodingSubject.cs" />
     <Compile Include="HMACRequestHasher.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
