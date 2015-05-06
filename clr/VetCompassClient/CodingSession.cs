@@ -68,7 +68,7 @@ namespace VetCompass.Client
             var request = CreateRequest(_sessionAddress);
             request.ContentType = "application/json";
             request.Method = WebRequestMethods.Http.Post;
-            var content = JsonConvert.SerializeObject(Subject);
+            var content = JsonConvert.SerializeObject(Subject); //todo: the serialiser is putting in x:null, change to not entering key?
             var requestBytes = Encoding.UTF8.GetBytes(content);
             request.ContentLength = requestBytes.Length;
            
@@ -80,6 +80,11 @@ namespace VetCompass.Client
                 stream.Write(requestBytes, 0, requestBytes.Length);
             }
             _sessionCreationTask = request.GetResponseAsync(); //todo:Error handling
+        }
+
+        private void HandleSessionCreationResponse(WebResponse response)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -106,7 +111,13 @@ namespace VetCompass.Client
             request.KeepAlive = true;
             request.CookieContainer = _cookies;
             SetDateHeader(request);
+            SetClientHeader(request);
             return request;
+        }
+
+        private void SetClientHeader(HttpWebRequest request)
+        {
+            request.Headers.Add(Constants.VetCompass_clientid_Header, _clientId.ToString());
         }
 
         /// <summary>
