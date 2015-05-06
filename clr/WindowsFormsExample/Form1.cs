@@ -15,7 +15,7 @@ namespace WindowsFormsExample
         {
             InitializeComponent();
 
-            var client = new CodingSessionFactory(Guid.NewGuid(), "not very secretasdasdasx", new Uri("http://10.144.3.69:5000/api/1.0/session/")); //new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
+            var client = new CodingSessionFactory(Guid.NewGuid(), "not very secret", new Uri("http://10.144.3.69:5000/api/1.0/session/")); //new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
             _session = client.StartCodingSession(new CodingSubject { CaseNumber = "winforms testing case" });
             _source.AllowEdit = false;
             _source.AllowNew = false;
@@ -30,6 +30,12 @@ namespace WindowsFormsExample
             { 
                 _source.Clear();
                 return; 
+            }
+            if (_session.IsFaulted) //guard faults
+            {
+                var error = _session.ServerErrorMessage ?? _session.Exception.ToString();
+                MessageBox.Show(error, "Server error message");
+                return;
             }
             //call asynchronously to the webservice, to keep the UI responsive but..
             var task = _session.QueryAsync(new VeNomQuery(text));
@@ -48,7 +54,9 @@ namespace WindowsFormsExample
                 case TaskStatus.Faulted:
                     //you can access the task.Exception here
                     //after any task exception, the coding session will be faulted (IsFaulted == true) and you can't contine to use it
-                    MessageBox.Show(task.Exception.ToString(), "Error"); //implement proper exception handling
+                    //If possible, a serverside error message will additionally be placed in _session.ServerErrorMessage
+                    var error = _session.ServerErrorMessage ?? task.Exception.ToString();
+                    MessageBox.Show(error, "Error"); //implement proper exception handling
                     return;
             }
             var result = task.Result; //handle success

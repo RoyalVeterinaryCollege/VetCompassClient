@@ -47,7 +47,7 @@ namespace VetCompass.Client
             using (var hasher = new HMACSHA256(sharedSecretKeyAsByteArray))
             {
                 var signature = Convert.ToBase64String(hasher.ComputeHash(byteEncoded));
-                request.Headers.Add(Constants.VetCompass_HMAC_Header, signature);
+                //request.Headers.Add(Constants.VetCompass_HMAC_Header, signature);
             }
         }
 

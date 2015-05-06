@@ -15,7 +15,7 @@ namespace VetCompass.Client
     public class CodingSession : ICodingSession
     {
         private readonly Guid _clientId;
-        private readonly CookieContainer _cookies = new CookieContainer(); //this is how to share the session
+        private readonly CookieContainer _cookies = new CookieContainer(); //this is how to share the session cookies (if any)
         private readonly string _sharedSecret;
         private readonly Uri _vetcompassAddress;
         private Uri _sessionAddress;
@@ -63,28 +63,6 @@ namespace VetCompass.Client
         public CodingSubject Subject { get; private set; }
 
         /// <summary>
-        /// Queries the VetCompass webservice synchronously.  This will block your thread, instead prefer QueryAsync.  This method will also throw on exception. 
-        /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
-        public VeNomQueryResponse QuerySynch(VeNomQuery query)
-        {
-            var queryAsync = QueryAsync(query);
-            Task.WaitAny(queryAsync);
-            return queryAsync.Result; //will throw on a task fault
-        }
-
-        /// <summary>
-        /// Asynchronously queries the VetCompass webservice.  The task can be used for error detection/handling.  This call won't block.
-        /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
-        public Task<VeNomQueryResponse> QueryAsync(VeNomQuery query)
-        {
-            return _sessionCreationTask.FlatMapSuccess(_ => Query(query));
-        }
-
-        /// <summary>
         ///     Creates a new coding session on the webservice
         /// </summary>
         public void Start()
@@ -106,9 +84,31 @@ namespace VetCompass.Client
             //This is a pipeline of asynch tasks
             _sessionCreationTask = request
                 .GetRequestStreamAsync() //the upload request stream actually tries to contact the server, so asynch from here
-                .MapSuccess(t => HandleRequestPosting(requestBytes)) //handle successful contact with server by writing request
-                .MapSuccess(t => request.GetResponseAsync()) //handle successful request write by getting asynch response 
-                .ActOnFailure(HandleSessionCreationFailure); //or handle any failure at any point
+                .MapSuccess(stream => HandleRequestPosting(request, stream, requestBytes)) //handle successful contact with server by writing request
+                .FlatMapSuccess(postedRequest => postedRequest.GetResponseAsync()) //handle successfully uploaded request write by getting asynch response 
+                .ActOnFailure(HandleSessionCreationFailure); //or handle any preceding failure
+        }
+
+        /// <summary>
+        /// Queries the VetCompass webservice synchronously.  This will block your thread, instead prefer QueryAsync.  This method will also throw on exception. 
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        public VeNomQueryResponse QuerySynch(VeNomQuery query)
+        {
+            var queryAsync = QueryAsync(query);
+            Task.WaitAny(queryAsync); //will throw on a task fault
+            return queryAsync.Result; 
+        }
+
+        /// <summary>
+        /// Asynchronously queries the VetCompass webservice.  The task can be used for error detection/handling.  This call won't block.
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        public Task<VeNomQueryResponse> QueryAsync(VeNomQuery query)
+        {
+            return _sessionCreationTask.FlatMapSuccess(_ => Query(query));
         }
 
         /// <summary>
@@ -158,15 +158,13 @@ namespace VetCompass.Client
         /// </summary>
         /// <param name="requestBytes"></param>
         /// <returns></returns>
-        private Action<Task<Stream>> HandleRequestPosting(byte[] requestBytes)
+        private WebRequest HandleRequestPosting(WebRequest request, Stream stream, byte[] requestBytes)
         {
-            return task =>
+            using (stream)
             {
-                using (var stream = task.Result)
-                {
-                    stream.Write(requestBytes, 0, requestBytes.Length);
-                }
-            };
+                stream.Write(requestBytes, 0, requestBytes.Length);
+            }
+            return request;
         }
 
         /// <summary>
@@ -214,7 +212,7 @@ namespace VetCompass.Client
             request.Method = WebRequestMethods.Http.Get;
             request.Accept = "application/json";
             var task = request.GetResponseAsync();
-            return task.ContinueWith(t => DeserialiseQueryReponse(t.Result));
+            return task.MapSuccess(DeserialiseQueryReponse);
         }
 
         /// <summary>
@@ -249,6 +247,22 @@ namespace VetCompass.Client
         ///     Gets the subject of the coding session
         /// </summary>
         CodingSubject Subject { get; }
+
+        /// <summary>
+        ///     Gets if the coding session has faulted.  If true, it's no longer usable
+        /// </summary>
+        bool IsFaulted { get; }
+
+        /// <summary>
+        ///     If IsFaulted == true, this will hold the exception
+        /// </summary>
+        AggregateException Exception { get; }
+
+        /// <summary>
+        ///     If IsFaulted == true, this may contain an error message from the server (it can be null, ie when contacting the
+        ///     server was impossible)
+        /// </summary>
+        string ServerErrorMessage { get; }
 
         /// <summary>
         ///     Queries the web service synchronously

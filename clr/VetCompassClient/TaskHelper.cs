@@ -19,7 +19,7 @@ namespace VetCompass.Client
         /// <returns></returns>
         public static Task<U> MapSuccess<T, U>(this Task<T> task, Func<T, U> f)
         {
-            return task.ContinueWith(innerTask =>
+            Task<Task<U>> nextTask = task.ContinueWith(innerTask =>
             {
                 var tcs = new TaskCompletionSource<U>();
 
@@ -47,21 +47,23 @@ namespace VetCompass.Client
                 }
 
                 return tcs.Task;
-            }).Unwrap();
+            });
+            var unwrapped = nextTask.Unwrap();
+            return unwrapped;
         }
 
         /// <summary>
-        /// Flat maps a succesful task to a new task, else retains the original cancellation or fault
+        /// Flat maps a succesful Task to a new Task[U], else retains the original cancellation or fault
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="U"></typeparam>
         /// <param name="task"></param>
         /// <param name="f"></param>
         /// <returns></returns>
-        public static Task<T> FlatMapSuccess<T>(this Task task, Func<Task,Task<T>> f)
+        public static Task<U> FlatMapSuccess<U>(this Task task, Func<Task,Task<U>> f)
         {
             return task.ContinueWith(innerTask =>
             {
-                var tcs = new TaskCompletionSource<Task<T>>();
+                var tcs = new TaskCompletionSource<Task<U>>();
 
                 switch (innerTask.Status)
                 {
@@ -76,8 +78,48 @@ namespace VetCompass.Client
                     case TaskStatus.RanToCompletion:
                         try
                         {
-                            Task<T> result = f(task);
+                            Task<U> result = f(task);
                             tcs.SetResult(result);
+                        }
+                        catch (Exception e)
+                        {
+                            tcs.SetException(e);
+                        }
+                        break;
+                }
+
+                return tcs.Task;
+            }).Unwrap().Unwrap();
+        }
+
+        /// <summary>
+        /// Flat maps a succesful Task to a new Task[U], else retains the original cancellation or fault
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="task"></param>
+        /// <param name="f"></param>
+        /// <returns></returns>
+        public static Task<U> FlatMapSuccess<T,U>(this Task<T> task, Func<T, Task<U>> f)
+        {
+            return task.ContinueWith(innerTask =>
+            {
+                var tcs = new TaskCompletionSource<Task<U>>();
+
+                switch (innerTask.Status)
+                {
+                    case TaskStatus.Canceled:
+                        tcs.SetCanceled();
+                        break;
+
+                    case TaskStatus.Faulted:
+                        tcs.SetException(task.Exception);
+                        break;
+
+                    case TaskStatus.RanToCompletion:
+                        try
+                        {
+                            Task<U> nextResult = f(task.Result);
+                            tcs.SetResult(nextResult);
                         }
                         catch (Exception e)
                         {
@@ -94,8 +136,25 @@ namespace VetCompass.Client
         {
             return task.ContinueWith(innerTask =>
             {
-                if (innerTask.IsFaulted) a(innerTask.Exception);
-                return innerTask;
+                var tcs = new TaskCompletionSource<T>();
+
+                switch (innerTask.Status)
+                {
+                    case TaskStatus.Canceled:
+                        tcs.SetCanceled();
+                        break;
+
+                    case TaskStatus.Faulted:
+                        a(innerTask.Exception);
+                        tcs.SetException(task.Exception);
+                        break;
+
+                    case TaskStatus.RanToCompletion:
+                        tcs.SetResult(task.Result);
+                        break;
+                }
+
+                return tcs.Task;
             }).Unwrap();
         }
     }
