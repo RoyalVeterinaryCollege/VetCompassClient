@@ -15,7 +15,7 @@ namespace WindowsFormsExample
         {
             InitializeComponent();
 
-            var client = new CodingSessionFactory(Guid.NewGuid(), "not very secret", new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
+            var client = new CodingSessionFactory(Guid.NewGuid(), "not very secretasdasdasx", new Uri("http://10.144.3.69:5000/api/1.0/session/")); //new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
             _session = client.StartCodingSession(new CodingSubject { CaseNumber = "winforms testing case" });
             _source.AllowEdit = false;
             _source.AllowNew = false;
@@ -32,14 +32,27 @@ namespace WindowsFormsExample
                 return; 
             }
             //call asynchronously to the webservice, to keep the UI responsive but..
-            var task = _session.QueryAsync(new VeNomQuery(text)); 
+            var task = _session.QueryAsync(new VeNomQuery(text));
+ 
             //..in a winforms/wpf app you will need to do the UI update on the UI thread
             //this is done using the TaskScheduler.FromCurrentSynchronizationContext() call
-            task.ContinueWith(t => BindResults(t.Result), TaskScheduler.FromCurrentSynchronizationContext());
+            task.ContinueWith(BindResults, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
-        private void BindResults(VeNomQueryResponse result)
+        private void BindResults(Task<VeNomQueryResponse> task)
         {
+            switch (task.Status)
+            {
+                case TaskStatus.Canceled: //handle cancellation
+                    return;
+                case TaskStatus.Faulted:
+                    //you can access the task.Exception here
+                    //after any task exception, the coding session will be faulted (IsFaulted == true) and you can't contine to use it
+                    MessageBox.Show(task.Exception.ToString(), "Error"); //implement proper exception handling
+                    return;
+            }
+            var result = task.Result; //handle success
+
             if (txtQuery.Text != result.Query.SearchExpression) return; //guard against multiple queries in quick succession coming out of order
             
             _source.Clear();

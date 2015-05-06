@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,7 +10,7 @@ using Newtonsoft.Json;
 namespace VetCompass.Client
 {
     /// <summary>
-    /// Handles calls to the VetCompass clinical coding web service.  ThreadSafe.
+    ///     Handles calls to the VetCompass clinical coding web service.  ThreadSafe.
     /// </summary>
     public class CodingSession : ICodingSession
     {
@@ -36,6 +37,22 @@ namespace VetCompass.Client
         }
 
         /// <summary>
+        ///     Gets if the coding session has faulted.  If true, it's no longer usable
+        /// </summary>
+        public bool IsFaulted { get; private set; }
+
+        /// <summary>
+        ///     If IsFaulted == true, this will hold the exception
+        /// </summary>
+        public AggregateException Exception { get; private set; }
+
+        /// <summary>
+        ///     If IsFaulted == true, this may contain an error message from the server (it can be null, ie when contacting the
+        ///     server was impossible)
+        /// </summary>
+        public string ServerErrorMessage { get; private set; }
+
+        /// <summary>
         ///     Gets the unique session id
         /// </summary>
         public Guid SessionId { get; private set; }
@@ -45,17 +62,26 @@ namespace VetCompass.Client
         /// </summary>
         public CodingSubject Subject { get; private set; }
 
+        /// <summary>
+        /// Queries the VetCompass webservice synchronously.  This will block your thread, instead prefer QueryAsync.  This method will also throw on exception. 
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
         public VeNomQueryResponse QuerySynch(VeNomQuery query)
         {
             var queryAsync = QueryAsync(query);
             Task.WaitAny(queryAsync);
-            return queryAsync.Result;
+            return queryAsync.Result; //will throw on a task fault
         }
 
+        /// <summary>
+        /// Asynchronously queries the VetCompass webservice.  The task can be used for error detection/handling.  This call won't block.
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
         public Task<VeNomQueryResponse> QueryAsync(VeNomQuery query)
         {
-            var queryTask = _sessionCreationTask.ContinueWith(task => Query(query));
-            return queryTask.Unwrap();
+            return _sessionCreationTask.FlatMapSuccess(_ => Query(query));
         }
 
         /// <summary>
@@ -68,23 +94,21 @@ namespace VetCompass.Client
             var request = CreateRequest(_sessionAddress);
             request.ContentType = "application/json";
             request.Method = WebRequestMethods.Http.Post;
-            var content = JsonConvert.SerializeObject(Subject); //todo: the serialiser is putting in x:null, change to not entering key?
+            var content = JsonConvert.SerializeObject(Subject);
+            //todo: the serialiser is putting in x:null, change to not entering key?
             var requestBytes = Encoding.UTF8.GetBytes(content);
             request.ContentLength = requestBytes.Length;
-           
+
             //HMAC hash the request
             var hmacHasher = new HMACRequestHasher();
             hmacHasher.HashRequest(request, _clientId, _sharedSecret, content);
-            using (var stream = request.GetRequestStream())
-            {
-                stream.Write(requestBytes, 0, requestBytes.Length);
-            }
-            _sessionCreationTask = request.GetResponseAsync(); //todo:Error handling
-        }
 
-        private void HandleSessionCreationResponse(WebResponse response)
-        {
-            throw new NotImplementedException();
+            //This is a pipeline of asynch tasks
+            _sessionCreationTask = request
+                .GetRequestStreamAsync() //the upload request stream actually tries to contact the server, so asynch from here
+                .MapSuccess(t => HandleRequestPosting(requestBytes)) //handle successful contact with server by writing request
+                .MapSuccess(t => request.GetResponseAsync()) //handle successful request write by getting asynch response 
+                .ActOnFailure(HandleSessionCreationFailure); //or handle any failure at any point
         }
 
         /// <summary>
@@ -96,7 +120,53 @@ namespace VetCompass.Client
             SessionId = sessionId;
             _sessionAddress = new Uri(_vetcompassAddress + sessionId.ToString() + "/");
             //no call required to web service, but set up a no-op task to continue from
-            _sessionCreationTask = Task.FromResult(0); //http://stackoverflow.com/questions/13127177/if-my-interface-must-return-task-what-is-the-best-way-to-have-a-no-operation-imp
+            _sessionCreationTask = Task.FromResult(0);
+            //http://stackoverflow.com/questions/13127177/if-my-interface-must-return-task-what-is-the-best-way-to-have-a-no-operation-imp
+        }
+
+        /// <summary>
+        ///     Handles task failure by faulting the session
+        /// </summary>
+        /// <param name="exception"></param>
+        private void HandleSessionCreationFailure(AggregateException exception)
+        {
+            //fault the session
+            Exception = exception.Flatten();
+            IsFaulted = true;
+
+            //try to get a server error message if possible
+            var error = Exception.InnerExceptions.FirstOrDefault() as WebException;
+            if (error != null)
+            {
+                var response = error.Response;
+
+                if (response != null)
+                {
+                    using (var stream = response.GetResponseStream())
+                    {
+                        using (var sr = new StreamReader(stream, Encoding.UTF8))
+                        {
+                            ServerErrorMessage = sr.ReadToEnd();
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Writes the request to the upload stream
+        /// </summary>
+        /// <param name="requestBytes"></param>
+        /// <returns></returns>
+        private Action<Task<Stream>> HandleRequestPosting(byte[] requestBytes)
+        {
+            return task =>
+            {
+                using (var stream = task.Result)
+                {
+                    stream.Write(requestBytes, 0, requestBytes.Length);
+                }
+            };
         }
 
         /// <summary>
@@ -132,6 +202,11 @@ namespace VetCompass.Client
             request.Headers.Add(Constants.VetCompass_Date_Header, date);
         }
 
+        /// <summary>
+        /// This does the actual query call to the server
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
         private Task<VeNomQueryResponse> Query(VeNomQuery query)
         {
             var encoded = HttpUtility.UrlEncode(query.SearchExpression);
