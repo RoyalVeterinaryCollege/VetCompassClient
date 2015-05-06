@@ -17,5 +17,10 @@ namespace VetCompass.Client
         ///     Header key for HMAC authorisation
         /// </summary>
         public const string VetCompass_HMAC_Header = "vetcompass-hmac-authorisation";
+
+        /// <summary>
+        /// Header key for the client id
+        /// </summary>
+        public const string VetCompass_clientid_Header =  "vetcompass-clientid";
     }
 }
