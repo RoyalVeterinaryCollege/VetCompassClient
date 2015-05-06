@@ -119,9 +119,8 @@ namespace VetCompass.Client
         {
             SessionId = sessionId;
             _sessionAddress = new Uri(_vetcompassAddress + sessionId.ToString() + "/");
-            //no call required to web service, but set up a no-op task to continue from
-            _sessionCreationTask = Task.FromResult(0);
-            //http://stackoverflow.com/questions/13127177/if-my-interface-must-return-task-what-is-the-best-way-to-have-a-no-operation-imp
+            //no webservice call required for resumption, but set up a no-op task to continue from
+            _sessionCreationTask = Task.FromResult(0);  //http://stackoverflow.com/questions/13127177/if-my-interface-must-return-task-what-is-the-best-way-to-have-a-no-operation-imp
         }
 
         /// <summary>
