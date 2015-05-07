@@ -3,12 +3,19 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Threading.Tasks;
+
 using System.Web;
-using Newtonsoft.Json;
+
+
 
 namespace VetCompass.Client
 {
+
+#if NET_4_5
+    using System.Threading.Tasks;
+    using Newtonsoft.Json;
+
+
     /// <summary>
     ///     Handles calls to the VetCompass clinical coding web service.  ThreadSafe.
     /// </summary>
@@ -287,5 +294,120 @@ namespace VetCompass.Client
         /// </summary>
         /// <param name="sessionId"></param>
         void Resume(Guid sessionId);
+    }
+
+#endif
+
+    /// <summary>
+    /// </summary>
+    /// <remarks>Use this interface to mock out your code for testing etc</remarks>
+    public interface ICodingSession
+    {
+        /// <summary>
+        ///     Gets the unique session id
+        /// </summary>
+        Guid SessionId { get; }
+
+        /// <summary>
+        ///     Gets the subject of the coding session
+        /// </summary>
+        CodingSubject Subject { get; }
+
+        /// <summary>
+        ///     Gets if the coding session has faulted.  If true, it's no longer usable
+        /// </summary>
+        bool IsFaulted { get; }
+
+        /// <summary>
+        ///     If IsFaulted == true, this will hold the exception
+        /// </summary>
+        Exception Exception { get; }
+
+        /// <summary>
+        ///     If IsFaulted == true, this may contain an error message from the server (it can be null, ie when contacting the
+        ///     server was impossible)
+        /// </summary>
+        string ServerErrorMessage { get; }
+
+        /// <summary>
+        ///     Queries the web service synchronously
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        VeNomQueryResponse QuerySynch(VeNomQuery query);
+
+        /// <summary>
+        ///     Queries the web service asynchronously
+        /// </summary>
+        /// <param name="query"></param>
+        /// <returns></returns>
+        VeNomQueryResponse  QueryAsync(VeNomQuery query); //todo:return type for .net 2.0
+
+        /// <summary>
+        ///     Creates a new coding session on the webservice
+        /// </summary>
+        void Start();
+
+        /// <summary>
+        ///     Configures this CodingSession to use a already created session
+        /// </summary>
+        /// <param name="sessionId"></param>
+        void Resume(Guid sessionId);
+    }
+
+    /// <summary>
+    ///     Handles calls to the VetCompass clinical coding web service.  ThreadSafe.
+    /// </summary>
+    public class CodingSession : ICodingSession
+    {
+        private readonly Guid _clientId;
+
+        private readonly CookieContainer _cookies = new CookieContainer();
+            //this is how to share the session cookies (if any)
+
+        private readonly string _sharedSecret;
+        private readonly Uri _vetcompassAddress;
+        private Uri _sessionAddress;
+       
+
+        /// <summary>
+        ///     Instantiates a coding session object
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="sharedSecret"></param>
+        /// <param name="subject"></param>
+        /// <param name="vetcompassAddress"></param>
+        public CodingSession(Guid clientId, string sharedSecret, CodingSubject subject, Uri vetcompassAddress)
+        {
+            _vetcompassAddress = vetcompassAddress;
+            _clientId = clientId;
+            _sharedSecret = sharedSecret;
+            Subject = subject;
+        }
+
+        public Guid SessionId { get; private set; }
+        public CodingSubject Subject { get; private set; }
+        public bool IsFaulted { get; private set; }
+        public Exception Exception { get; private set; }
+        public string ServerErrorMessage { get; private set; }
+        public VeNomQueryResponse QuerySynch(VeNomQuery query)
+        {
+            throw new NotImplementedException();
+        }
+
+        public VeNomQueryResponse QueryAsync(VeNomQuery query)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Start()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Resume(Guid sessionId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

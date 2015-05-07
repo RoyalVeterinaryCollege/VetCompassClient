@@ -2,13 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+
 using FluentAssertions;
 using NUnit.Framework;
 using VetCompass.Client;
 
 namespace VetCompassClient.Tests
 {
+#if NET_4_5
+    using System.Threading.Tasks;
     [TestFixture]
     public class TaskHelper
     {
@@ -112,4 +114,6 @@ namespace VetCompassClient.Tests
             return Task.Factory.StartNew<string>(() => { throw new Exception("task1 fault"); });
         }
     }
+
+#endif
 }

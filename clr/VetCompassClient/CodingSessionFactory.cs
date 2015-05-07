@@ -84,7 +84,7 @@ namespace VetCompass.Client
             get { return _searchExpression; }
             set
             {
-                if (string.IsNullOrWhiteSpace(value)) throw new ArgumentNullException("SearchExpression");
+                if (String.IsNullOrEmpty(value) || string.IsNullOrEmpty(value.Trim())) throw new ArgumentNullException("SearchExpression");
                 _searchExpression = value;
             }
         }

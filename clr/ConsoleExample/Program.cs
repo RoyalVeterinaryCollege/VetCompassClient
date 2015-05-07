@@ -16,6 +16,7 @@ namespace ConsoleExample
             var x = CreateServiceClientKey();
         }
 
+#if NET_4_5
         void ThroughPutTest()
         {
             var client = new CodingSessionFactory(Guid.NewGuid(), "not very secret", new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
@@ -33,6 +34,7 @@ namespace ConsoleExample
             Console.WriteLine(DateTime.Now - start);
             Console.ReadKey();
         }
+#endif
 
         public static string CreateServiceClientKey()
         {

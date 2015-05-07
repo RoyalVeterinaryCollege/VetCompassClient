@@ -11,6 +11,9 @@
     <AssemblyName>WindowsFormsExample</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <!---The next two define some compiler directives for detecting the framework version-->
+    <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v4.5' ">NET_4_5</DefineConstants>
+    <DefineConstants Condition=" '$(TargetFrameworkVersion)' != 'v4.0' ">NOT_NET_4_5</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>

@@ -37,14 +37,17 @@ namespace WindowsFormsExample
                 MessageBox.Show(error, "Server error message");
                 return;
             }
+#if NET_4_5
             //call asynchronously to the webservice, to keep the UI responsive but..
             var task = _session.QueryAsync(new VeNomQuery(text));
  
             //..in a winforms/wpf app you will need to do the UI update on the UI thread
             //this is done using the TaskScheduler.FromCurrentSynchronizationContext() call
             task.ContinueWith(BindResults, TaskScheduler.FromCurrentSynchronizationContext());
+#endif
         }
 
+#if NET_4_5
         private void BindResults(Task<VeNomQueryResponse> task)
         {
             switch (task.Status)
@@ -69,5 +72,7 @@ namespace WindowsFormsExample
                 _source.Add(vetCompassCode);
             }
         }
+#endif
     }
+
 }
