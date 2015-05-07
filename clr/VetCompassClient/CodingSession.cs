@@ -3,19 +3,16 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
-
 using System.Web;
 
-
-
-namespace VetCompass.Client
+namespace VetCompass.Client 
 {
 
-#if NET_4_5
+#if NET45
     using System.Threading.Tasks;
     using Newtonsoft.Json;
 
-
+   
     /// <summary>
     ///     Handles calls to the VetCompass clinical coding web service.  ThreadSafe.
     /// </summary>
@@ -297,7 +294,8 @@ namespace VetCompass.Client
     }
 
 #endif
-
+    
+#if NET35
     /// <summary>
     /// </summary>
     /// <remarks>Use this interface to mock out your code for testing etc</remarks>
@@ -390,6 +388,7 @@ namespace VetCompass.Client
         public bool IsFaulted { get; private set; }
         public Exception Exception { get; private set; }
         public string ServerErrorMessage { get; private set; }
+
         public VeNomQueryResponse QuerySynch(VeNomQuery query)
         {
             throw new NotImplementedException();
@@ -397,6 +396,9 @@ namespace VetCompass.Client
 
         public VeNomQueryResponse QueryAsync(VeNomQuery query)
         {
+            //var request = WebRequest.Create() 
+  
+
             throw new NotImplementedException();
         }
 
@@ -408,6 +410,46 @@ namespace VetCompass.Client
         public void Resume(Guid sessionId)
         {
             throw new NotImplementedException();
+        }
+    }
+
+#endif
+
+    public static class RequestFactory
+    {
+        /// <summary>
+        ///     Creates a HttpWebRequest to the uri and prepares all the common code
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <param name="cookies"></param>
+        /// <param name="clientId"></param>
+        /// <returns></returns>
+        public static HttpWebRequest CreateRequest(Uri uri, CookieContainer cookies, Guid clientId)
+        {
+            //todo:Time out
+            var request = (HttpWebRequest)WebRequest.Create(uri);
+            request.KeepAlive = true;
+            request.CookieContainer = cookies;
+            SetDateHeader(request);
+            SetClientHeader(request, clientId);
+            return request;
+        }
+
+        public static void SetClientHeader(HttpWebRequest request, Guid clientId)
+        {
+            request.Headers.Add(Constants.VetCompass_clientid_Header, clientId.ToString());
+        }
+
+        /// <summary>
+        ///     Sets the vetcompass request date header
+        /// </summary>
+        /// <param name="request"></param>
+        public static void SetDateHeader(WebRequest request)
+        {
+            //storing the date the request was made reduces the window for replay attacks
+            //http://stackoverflow.com/questions/44391/how-do-i-prevent-replay-attacks
+            var date = DateTime.UtcNow.ToString("o"); //date format = ISO 8601, http://en.wikipedia.org/wiki/ISO_8601
+            request.Headers.Add(Constants.VetCompass_Date_Header, date);
         }
     }
 }

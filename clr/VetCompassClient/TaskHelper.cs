@@ -1,4 +1,5 @@
-﻿#if NET_4_5
+﻿#if NET45
+
 using System;
 using System.Threading.Tasks;
 
