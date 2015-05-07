@@ -81,16 +81,16 @@ namespace VetCompass.Client
             var hmacHasher = new HMACRequestHasher();
             hmacHasher.HashRequest(request, _clientId, _sharedSecret, content);
 
-            //This is a pipeline of asynch tasks
+            //This is a pipeline of asynch tasks which create a session on the server or results in the coding session being faulted
             _sessionCreationTask = request
                 .GetRequestStreamAsync() //the upload request stream actually tries to contact the server, so asynch from here
                 .MapSuccess(stream => HandleRequestPosting(request, stream, requestBytes)) //handle successful contact with server by writing request
-                .FlatMapSuccess(postedRequest => postedRequest.GetResponseAsync()) //handle successfully uploaded request write by getting asynch response 
-                .ActOnFailure(HandleSessionCreationFailure); //or handle any preceding failure
+                .FlatMapSuccess(postedRequest => postedRequest.GetResponseAsync()) //handle successfully writing request by getting asynch response 
+                .ActOnFailure(HandleSessionCreationFailure); //or handle any antecdent failure
         }
 
         /// <summary>
-        /// Queries the VetCompass webservice synchronously.  This will block your thread, instead prefer QueryAsync.  This method will also throw on exception. 
+        /// Queries the VetCompass webservice synchronously.  This will block your thread, instead prefer QueryAsync.  This method will also throw an exception on a failure. 
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
@@ -102,7 +102,7 @@ namespace VetCompass.Client
         }
 
         /// <summary>
-        /// Asynchronously queries the VetCompass webservice.  The task can be used for error detection/handling.  This call won't block.
+        /// Asynchronously queries the VetCompass webservice.  The task can be used for error detection/handling.  This call won't block or throw an exception.
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>

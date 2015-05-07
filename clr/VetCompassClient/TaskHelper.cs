@@ -132,6 +132,13 @@ namespace VetCompass.Client
             }).Unwrap().Unwrap();
         }
 
+        /// <summary>
+        /// Permits a state altering side effect conditioned on an antecedent task failure
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="task"></param>
+        /// <param name="a"></param>
+        /// <returns></returns>
         public static Task<T> ActOnFailure<T>(this Task<T> task, Action<AggregateException> a)
         {
             return task.ContinueWith(innerTask =>
