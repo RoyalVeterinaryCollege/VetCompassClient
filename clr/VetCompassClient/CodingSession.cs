@@ -312,12 +312,7 @@ namespace VetCompass.Client
         /// <returns></returns>
         VeNomQueryResponse QuerySynch(VeNomQuery query);
 
-        /// <summary>
-        ///     Queries the web service asynchronously
-        /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
-        VeNomQueryResponse  QueryAsync(VeNomQuery query); //todo:return type for .net 2.0
+      
 
         /// <summary>
         ///     Creates a new coding session on the webservice
@@ -329,6 +324,8 @@ namespace VetCompass.Client
         /// </summary>
         /// <param name="sessionId"></param>
         void Resume(Guid sessionId);
+
+        void QueryAsync(VeNomQuery query, Action<VeNomQueryResponse> callback);
     }
 
     /// <summary>

@@ -11,9 +11,6 @@
     <AssemblyName>ConsoleExample</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <!---The next two define some compiler directives for detecting the framework version-->
-    <DefineConstants Condition=" '$(TargetFrameworkVersion)' == 'v4.5' ">NET_4_5</DefineConstants>
-    <DefineConstants Condition=" '$(TargetFrameworkVersion)' != 'v4.0' ">NOT_NET_4_5</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -53,6 +50,15 @@
     <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <!--The next two PropertyGroups define compile constants for building against 4.5 and 3.5 of the framework.  -->
+  <PropertyGroup Condition="  '$(TargetFrameworkVersion)' == 'v4.5' ">
+    <DefineConstants>NET45</DefineConstants>
+    <OutputPath>bin\$(Configuration)\$(TargetFrameworkVersion)</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="  '$(TargetFrameworkVersion)' == 'v3.5' ">
+    <DefineConstants>NET35</DefineConstants>
+    <OutputPath>bin\$(Configuration)\$(TargetFrameworkVersion)</OutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />

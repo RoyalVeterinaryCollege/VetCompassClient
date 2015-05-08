@@ -1,11 +1,15 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using VetCompass.Client;
 
 namespace WindowsFormsExample
 {
+
+#if NET45
+using System.Threading.Tasks;
+#endif
+
     public partial class Form1 : Form
     {
         readonly ICodingSession _session;
@@ -26,7 +30,8 @@ namespace WindowsFormsExample
         private void txtQuery_KeyUp(object sender, KeyEventArgs e)
         {
             var text = txtQuery.Text;
-            if (String.IsNullOrWhiteSpace(text)) //guard against searching on the empty string
+            if (text == null) return;//guard against searching on empty, null, or whitespace strings
+            if (String.IsNullOrEmpty(text.Trim())) 
             { 
                 _source.Clear();
                 return; 
@@ -37,19 +42,27 @@ namespace WindowsFormsExample
                 MessageBox.Show(error, "Server error message");
                 return;
             }
-#if NET_4_5
+#if NET45
             //call asynchronously to the webservice, to keep the UI responsive but..
             var task = _session.QueryAsync(new VeNomQuery(text));
  
             //..in a winforms/wpf app you will need to do the UI update on the UI thread
             //this is done using the TaskScheduler.FromCurrentSynchronizationContext() call
-            task.ContinueWith(BindResults, TaskScheduler.FromCurrentSynchronizationContext());
+            task.ContinueWith(HandleTaskResult, TaskScheduler.FromCurrentSynchronizationContext());
 #endif
-
+#if NET35
+            _session.QueryAsync(new VeNomQuery(text), MarshallQueryResponse);
+#endif
         }
 
-#if NET_4_5
-        private void BindResults(Task<VeNomQueryResponse> task)
+        private void MarshallQueryResponse(VeNomQueryResponse queryResponse)
+        {
+            if (InvokeRequired) this.Invoke(() => BindResults(queryResponse)); //invoke on the UI thread
+            else BindResults(queryResponse);
+        }
+
+#if NET45
+        private void HandleTaskResult(Task<VeNomQueryResponse> task)
         {
             switch (task.Status)
             {
@@ -64,16 +77,21 @@ namespace WindowsFormsExample
                     return;
             }
             var result = task.Result; //handle success
+            BindResults(queryResponse)
+          
+        }
+#endif
 
-            if (txtQuery.Text != result.Query.SearchExpression) return; //guard against multiple queries in quick succession coming out of order
-            
+        private void BindResults(VeNomQueryResponse queryResponse)
+        {
+            if (txtQuery.Text != queryResponse.Query.SearchExpression) return; //guard against multiple queries in quick succession coming out of order
+
             _source.Clear();
-            foreach (var vetCompassCode in result.Results)
+            foreach (var vetCompassCode in queryResponse.Results)
             {
                 _source.Add(vetCompassCode);
             }
         }
-#endif
     }
 
 }

@@ -52,6 +52,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+  <!--The next two PropertyGroups define compile constants for building against 4.5 and 3.5 of the framework.  See AfterBuild task for the building of both -->
   <PropertyGroup Condition="  '$(TargetFrameworkVersion)' == 'v4.5' ">
     <DefineConstants>NET45</DefineConstants>
     <OutputPath>bin\$(Configuration)\$(TargetFrameworkVersion)</OutputPath>
