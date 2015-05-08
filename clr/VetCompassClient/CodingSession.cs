@@ -373,14 +373,14 @@ namespace VetCompass.Client
         public void QueryAsync(VeNomQuery query, Action<VeNomQueryResponse> callback)
         {
             var request = CreateQueryRequest(query);
-
-            //todo: asynchronously receive the web response.  Then deserialise it.  Then somehow communicate back with the caller?
+            //send the request in as the callback state, then the result is accessible
             request.BeginGetResponse(asynchResult =>
             {
-                var webResponse = (WebResponse) asynchResult.AsyncState;
+                var webRequest = (WebRequest) asynchResult.AsyncState;
+                var webResponse = webRequest.GetResponse();
                 var queryResponse = DeserialiseQueryReponse(webResponse);
                 callback(queryResponse);
-            }, null);
+            }, request);
         }
 
         private HttpWebRequest CreateQueryRequest(VeNomQuery query)
@@ -410,7 +410,8 @@ namespace VetCompass.Client
 
         public void Resume(Guid sessionId)
         {
-            throw new NotImplementedException();
+            SessionId = sessionId;
+            _sessionAddress = new Uri(_vetcompassAddress + sessionId.ToString() + "/");
         }
 
         /// <summary>
