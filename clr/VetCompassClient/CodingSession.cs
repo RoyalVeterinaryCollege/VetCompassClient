@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Web;
+using Newtonsoft.Json;
 
 namespace VetCompass.Client 
 {
@@ -177,30 +178,7 @@ namespace VetCompass.Client
         /// <returns></returns>
         private HttpWebRequest CreateRequest(Uri uri)
         {
-            //todo:Time out
-            var request = (HttpWebRequest) WebRequest.Create(uri);
-            request.KeepAlive = true;
-            request.CookieContainer = _cookies;
-            SetDateHeader(request);
-            SetClientHeader(request);
-            return request;
-        }
-
-        private void SetClientHeader(HttpWebRequest request)
-        {
-            request.Headers.Add(Constants.VetCompass_clientid_Header, _clientId.ToString());
-        }
-
-        /// <summary>
-        ///     Sets the vetcompass request date header
-        /// </summary>
-        /// <param name="request"></param>
-        private void SetDateHeader(WebRequest request)
-        {
-            //storing the date the request was made reduces the window for replay attacks
-            //http://stackoverflow.com/questions/44391/how-do-i-prevent-replay-attacks
-            var date = DateTime.UtcNow.ToString("o"); //date format = ISO 8601, http://en.wikipedia.org/wiki/ISO_8601
-            request.Headers.Add(Constants.VetCompass_Date_Header, date);
+            return RequestFactory.CreateRequest(uri, _cookies, _clientId);
         }
 
         /// <summary>
@@ -391,15 +369,41 @@ namespace VetCompass.Client
 
         public VeNomQueryResponse QuerySynch(VeNomQuery query)
         {
-            throw new NotImplementedException();
+            var response = CreateQueryRequest(query).GetResponse(); 
+            return DeserialiseQueryReponse(response);
         }
 
-        public VeNomQueryResponse QueryAsync(VeNomQuery query)
+        public void QueryAsync(VeNomQuery query, Action<VeNomQueryResponse> callback)
         {
-            //var request = WebRequest.Create() 
-  
+            var request = CreateQueryRequest(query);
 
-            throw new NotImplementedException();
+            //todo: asynchronously receive the web response.  Then deserialise it.  Then somehow communicate back with the caller?
+            request.BeginGetResponse(asynchResult =>
+            {
+                var webResponse = (WebResponse) asynchResult.AsyncState;
+                var queryResponse = DeserialiseQueryReponse(webResponse);
+                callback(queryResponse);
+            }, null);
+        }
+
+        private HttpWebRequest CreateQueryRequest(VeNomQuery query)
+        {
+            var encoded = HttpUtility.UrlEncode(query.SearchExpression);
+            var request = CreateRequest(new Uri(_sessionAddress + "search/" + encoded));
+            request.Method = WebRequestMethods.Http.Get;
+            request.Accept = "application/json";
+            return request;
+        }
+
+
+        /// <summary>
+        ///     Creates a HttpWebRequest to the uri and prepares all the common code
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <returns></returns>
+        private HttpWebRequest CreateRequest(Uri uri)
+        {
+            return RequestFactory.CreateRequest(uri, _cookies, _clientId);
         }
 
         public void Start()
@@ -411,45 +415,24 @@ namespace VetCompass.Client
         {
             throw new NotImplementedException();
         }
+
+        /// <summary>
+        ///     Deserialises the web service's query response
+        /// </summary>
+        /// <param name="response"></param>
+        /// <returns></returns>
+        private VeNomQueryResponse DeserialiseQueryReponse(WebResponse response)
+        {
+            using (var stream = response.GetResponseStream())
+            {
+                using (var sr = new StreamReader(stream, Encoding.UTF8))
+                {
+                    var responseContent = sr.ReadToEnd();
+                    return JsonConvert.DeserializeObject<VeNomQueryResponse>(responseContent);
+                }
+            }
+        }
     }
 
 #endif
-
-    public static class RequestFactory
-    {
-        /// <summary>
-        ///     Creates a HttpWebRequest to the uri and prepares all the common code
-        /// </summary>
-        /// <param name="uri"></param>
-        /// <param name="cookies"></param>
-        /// <param name="clientId"></param>
-        /// <returns></returns>
-        public static HttpWebRequest CreateRequest(Uri uri, CookieContainer cookies, Guid clientId)
-        {
-            //todo:Time out
-            var request = (HttpWebRequest)WebRequest.Create(uri);
-            request.KeepAlive = true;
-            request.CookieContainer = cookies;
-            SetDateHeader(request);
-            SetClientHeader(request, clientId);
-            return request;
-        }
-
-        public static void SetClientHeader(HttpWebRequest request, Guid clientId)
-        {
-            request.Headers.Add(Constants.VetCompass_clientid_Header, clientId.ToString());
-        }
-
-        /// <summary>
-        ///     Sets the vetcompass request date header
-        /// </summary>
-        /// <param name="request"></param>
-        public static void SetDateHeader(WebRequest request)
-        {
-            //storing the date the request was made reduces the window for replay attacks
-            //http://stackoverflow.com/questions/44391/how-do-i-prevent-replay-attacks
-            var date = DateTime.UtcNow.ToString("o"); //date format = ISO 8601, http://en.wikipedia.org/wiki/ISO_8601
-            request.Headers.Add(Constants.VetCompass_Date_Header, date);
-        }
-    }
 }

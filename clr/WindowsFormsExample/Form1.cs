@@ -45,6 +45,7 @@ namespace WindowsFormsExample
             //this is done using the TaskScheduler.FromCurrentSynchronizationContext() call
             task.ContinueWith(BindResults, TaskScheduler.FromCurrentSynchronizationContext());
 #endif
+
         }
 
 #if NET_4_5
