@@ -1,18 +1,15 @@
-﻿#if NET45
-
-using System;
+﻿using System;
 using System.Threading.Tasks;
 
 namespace VetCompass.Client
 {
     /// <summary>
-    /// This class implements some helper methods on the base Task library
+    ///     This class implements some helper methods on the base Task library
     /// </summary>
     public static class TaskHelper
     {
-      
         /// <summary>
-        /// Maps a successfully completed task, else retains the original cancellation or fault
+        ///     Maps a successfully completed task, else retains the original cancellation or fault
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <typeparam name="U"></typeparam>
@@ -21,7 +18,7 @@ namespace VetCompass.Client
         /// <returns></returns>
         public static Task<U> MapSuccess<T, U>(this Task<T> task, Func<T, U> f)
         {
-            Task<Task<U>> nextTask = task.ContinueWith(innerTask =>
+            var nextTask = task.ContinueWith(innerTask =>
             {
                 var tcs = new TaskCompletionSource<U>();
 
@@ -55,13 +52,13 @@ namespace VetCompass.Client
         }
 
         /// <summary>
-        /// Flat maps a succesful Task to a new Task[U], else retains the original cancellation or fault
+        ///     Flat maps a succesful Task to a new Task[U], else retains the original cancellation or fault
         /// </summary>
         /// <typeparam name="U"></typeparam>
         /// <param name="task"></param>
         /// <param name="f"></param>
         /// <returns></returns>
-        public static Task<U> FlatMapSuccess<U>(this Task task, Func<Task,Task<U>> f)
+        public static Task<U> FlatMapSuccess<U>(this Task task, Func<Task, Task<U>> f)
         {
             return task.ContinueWith(innerTask =>
             {
@@ -80,7 +77,7 @@ namespace VetCompass.Client
                     case TaskStatus.RanToCompletion:
                         try
                         {
-                            Task<U> result = f(task);
+                            var result = f(task);
                             tcs.SetResult(result);
                         }
                         catch (Exception e)
@@ -95,13 +92,13 @@ namespace VetCompass.Client
         }
 
         /// <summary>
-        /// Flat maps a succesful Task to a new Task[U], else retains the original cancellation or fault
+        ///     Flat maps a succesful Task to a new Task[U], else retains the original cancellation or fault
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="task"></param>
         /// <param name="f"></param>
         /// <returns></returns>
-        public static Task<U> FlatMapSuccess<T,U>(this Task<T> task, Func<T, Task<U>> f)
+        public static Task<U> FlatMapSuccess<T, U>(this Task<T> task, Func<T, Task<U>> f)
         {
             return task.ContinueWith(innerTask =>
             {
@@ -120,7 +117,7 @@ namespace VetCompass.Client
                     case TaskStatus.RanToCompletion:
                         try
                         {
-                            Task<U> nextResult = f(task.Result);
+                            var nextResult = f(task.Result);
                             tcs.SetResult(nextResult);
                         }
                         catch (Exception e)
@@ -135,7 +132,7 @@ namespace VetCompass.Client
         }
 
         /// <summary>
-        /// Permits a state altering side effect conditioned on an antecedent task failure
+        ///     Permits a state altering side effect conditioned on an antecedent task failure
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="task"></param>
@@ -166,6 +163,20 @@ namespace VetCompass.Client
                 return tcs.Task;
             }).Unwrap();
         }
+
+#if NET35
+        /// <summary>
+        ///     Adds a helper method for creating tasks directly from results which is missing in the .net 3.5 TPL library
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="result"></param>
+        /// <returns></returns>
+        public static Task<T> FromResult<T>(T result)
+        {
+            var tcs = new TaskCompletionSource<T>();
+            tcs.SetResult(result);
+            return tcs.Task;
+        }
+#endif
     }
 }
-#endif

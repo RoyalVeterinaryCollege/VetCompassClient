@@ -1,14 +1,11 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using VetCompass.Client;
 
 namespace WindowsFormsExample
 {
-
-#if NET45
-using System.Threading.Tasks;
-#endif
 
     public partial class Form1 : Form
     {
@@ -19,10 +16,9 @@ using System.Threading.Tasks;
         {
             InitializeComponent();
 
-            var client = new CodingSessionFactory(Guid.NewGuid(), "not very secret", new Uri("http://192.168.1.199:5000/api/1.0/session/")); //new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
-            //_session = client.StartCodingSession(new CodingSubject { CaseNumber = "winforms testing case" });
-            _session = client.ResumeCodingSession(new CodingSubject {CaseNumber = "winforms testing case"},
-                (Guid) new GuidConverter().ConvertFromString("5537ade0-b91d-11e4-9f5c-0800200c9a66"));
+            var client = new CodingSessionFactory(Guid.NewGuid(), "not very secret", new Uri("http://10.144.3.72:5000/api/1.0/session/")); //new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
+            _session = client.StartCodingSession(new CodingSubject { CaseNumber = "winforms testing case" });
+            //_session = client.ResumeCodingSession(new CodingSubject {CaseNumber = "winforms testing case"},(Guid) new GuidConverter().ConvertFromString("5537ade0-b91d-11e4-9f5c-0800200c9a66"));
             _source.AllowEdit = false;
             _source.AllowNew = false;
             lstBox.DisplayMember = "Name";
@@ -44,31 +40,15 @@ using System.Threading.Tasks;
                 MessageBox.Show(error, "Server error message");
                 return;
             }
-#if NET45
+
             //call asynchronously to the webservice, to keep the UI responsive but..
             var task = _session.QueryAsync(new VeNomQuery(text));
  
             //..in a winforms/wpf app you will need to do the UI update on the UI thread
             //this is done using the TaskScheduler.FromCurrentSynchronizationContext() call
             task.ContinueWith(HandleTaskResult, TaskScheduler.FromCurrentSynchronizationContext());
-#endif
-#if NET35
-            //call asynchronously to the webservice, to keep the UI responsive, the callback handles the marshalling back to the UI thread
-            _session.QueryAsync(new VeNomQuery(text), MarshallQueryResponse);
-#endif
         }
 
-        /// <summary>
-        /// A callback method for handling the webservice's response to a query being available. This handles the marshalling to the UI thread
-        /// </summary>
-        /// <param name="queryResponse"></param>
-        private void MarshallQueryResponse(VeNomQueryResponse queryResponse)
-        {
-            if (InvokeRequired) this.Invoke(() => BindResults(queryResponse)); //invoke on the UI thread if required
-            else BindResults(queryResponse);
-        }
-
-#if NET45
         private void HandleTaskResult(Task<VeNomQueryResponse> task)
         {
             switch (task.Status)
@@ -84,10 +64,9 @@ using System.Threading.Tasks;
                     return;
             }
             var result = task.Result; //handle success
-            BindResults(queryResponse)
-          
+            BindResults(result);
         }
-#endif
+
         /// <summary>
         /// Binds the query response to the UI
         /// </summary>

@@ -1,35 +1,38 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-
+using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
 using VetCompass.Client;
 
 namespace VetCompassClient.Tests
 {
-#if NET_4_5
-    using System.Threading.Tasks;
     [TestFixture]
     public class TaskHelper
     {
+        private static Task<string> MakeFaultyTask()
+        {
+            return Task.Factory.StartNew<string>(() => { throw new Exception("task1 fault"); });
+        }
 
         [Test]
-        public void Antecedant_failure_is_propagated_to_subsequent_tasks()
+        public void A_middle_failure_is_a_failure()
         {
-            var task1 = MakeFaultyTask();
-            var task2 = task1.MapSuccess(str => str.Length);
-
+            var task =
+                Task.Factory.StartNew(() => "initial task result")
+                    .MapSuccess(x => x.Length)
+                    .FlatMapSuccess(x => MakeFaultyTask()) //error 
+                    .MapSuccess(x => x.Length);
             try
             {
-                task2.Wait(); //Wait throws annoyingly...
+                task.Wait(); //Wait throws annoyingly...
             }
-            catch { } //ignore this annoying behaviour 
+            catch
+            {
+            } //ignore this annoying behaviour 
             finally
             {
-                task2.IsFaulted.Should().BeTrue();
-                task2.Exception.Flatten().InnerExceptions.First().Should().Be(task1.Exception.InnerExceptions.First());
+                task.IsFaulted.Should().BeTrue("error should be propagated to final task");
             }
         }
 
@@ -45,7 +48,9 @@ namespace VetCompassClient.Tests
             {
                 task3.Wait(); //Wait throws annoyingly...
             }
-            catch { } //ignore this annoying behaviour 
+            catch
+            {
+            } //ignore this annoying behaviour 
             finally
             {
                 task3.IsFaulted.Should().BeTrue("error should be propagated to final task");
@@ -55,19 +60,21 @@ namespace VetCompassClient.Tests
         }
 
         [Test]
-        public void FlatMapping_an_antecedant_error_propagates_the_error ()
+        public void Antecedant_failure_is_propagated_to_subsequent_tasks()
         {
             var task1 = MakeFaultyTask();
-            var task2 = task1.FlatMapSuccess(innerTask => Task.Factory.StartNew(()=> "next task result"));
+            var task2 = task1.MapSuccess(str => str.Length);
 
             try
             {
                 task2.Wait(); //Wait throws annoyingly...
             }
-            catch { } //ignore this annoying behaviour 
+            catch
+            {
+            } //ignore this annoying behaviour 
             finally
             {
-                task2.IsFaulted.Should().BeTrue("error should be propagated to final task");
+                task2.IsFaulted.Should().BeTrue();
                 task2.Exception.Flatten().InnerExceptions.First().Should().Be(task1.Exception.InnerExceptions.First());
             }
         }
@@ -83,7 +90,9 @@ namespace VetCompassClient.Tests
             {
                 task.Wait(); //Wait throws annoyingly...
             }
-            catch { } //ignore this annoying behaviour 
+            catch
+            {
+            } //ignore this annoying behaviour 
             finally
             {
                 task.IsFaulted.Should().BeTrue("error should be propagated to final task");
@@ -91,29 +100,23 @@ namespace VetCompassClient.Tests
         }
 
         [Test]
-        public void A_middle_failure_is_a_failure()
+        public void FlatMapping_an_antecedant_error_propagates_the_error()
         {
-            var task =
-                Task.Factory.StartNew(() => "initial task result")
-                    .MapSuccess(x => x.Length)
-                    .FlatMapSuccess(x => MakeFaultyTask()) //error 
-                    .MapSuccess(x=>x.Length);
+            var task1 = MakeFaultyTask();
+            var task2 = task1.FlatMapSuccess(innerTask => Task.Factory.StartNew(() => "next task result"));
+
             try
             {
-                task.Wait(); //Wait throws annoyingly...
+                task2.Wait(); //Wait throws annoyingly...
             }
-            catch { } //ignore this annoying behaviour 
+            catch
+            {
+            } //ignore this annoying behaviour 
             finally
             {
-                task.IsFaulted.Should().BeTrue("error should be propagated to final task");
+                task2.IsFaulted.Should().BeTrue("error should be propagated to final task");
+                task2.Exception.Flatten().InnerExceptions.First().Should().Be(task1.Exception.InnerExceptions.First());
             }
         }
-
-        private static Task<string> MakeFaultyTask()
-        {
-            return Task.Factory.StartNew<string>(() => { throw new Exception("task1 fault"); });
-        }
     }
-
-#endif
 }

@@ -1,6 +1,4 @@
-#if NET45
-
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -69,7 +67,8 @@ namespace VetCompass.Client
         /// </summary>
         public void Start()
         {
-            //todo:Handle this method being called twice by ignoring second call
+            if (SessionId != default(Guid)) return; //guard Start being called twice
+
             SessionId = Guid.NewGuid();
             _sessionAddress = new Uri(_vetcompassAddress + SessionId.ToString() + "/");
             var request = CreateRequest(_sessionAddress);
@@ -89,7 +88,7 @@ namespace VetCompass.Client
                 .GetRequestStreamAsync() //the upload request stream actually tries to contact the server, so asynch from here
                 .MapSuccess(stream => HandleRequestPosting(request, stream, requestBytes)) //handle successful contact with server by writing request
                 .FlatMapSuccess(postedRequest => postedRequest.GetResponseAsync()) //handle successfully writing request by getting asynch response 
-                .ActOnFailure(HandleSessionCreationFailure); //or handle any antecdent failure
+                .ActOnFailure(HandleSessionCreationFailure); //or handle any antecedent failure
         }
 
         /// <summary>
@@ -123,7 +122,15 @@ namespace VetCompass.Client
             SessionId = sessionId;
             _sessionAddress = new Uri(_vetcompassAddress + sessionId.ToString() + "/");
             //no webservice call required for resumption, but set up a no-op task to continue from
+
+#if NET45
             _sessionCreationTask = Task.FromResult(0);  //http://stackoverflow.com/questions/13127177/if-my-interface-must-return-task-what-is-the-best-way-to-have-a-no-operation-imp
+#endif
+#if NET35
+            _sessionCreationTask = TaskHelper.FromResult(0);
+#endif
+
+            //throw new NotImplementedException();
         }
 
         /// <summary>
@@ -269,5 +276,3 @@ namespace VetCompass.Client
         void Resume(Guid sessionId);
     }
 }
-
-#endif
