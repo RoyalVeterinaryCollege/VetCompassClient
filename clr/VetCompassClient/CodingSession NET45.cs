@@ -1,3 +1,5 @@
+#if NET45
+
 using System;
 using System.IO;
 using System.Linq;
@@ -5,15 +7,10 @@ using System.Net;
 using System.Text;
 using System.Web;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace VetCompass.Client 
 {
-
-#if NET45
-    using System.Threading.Tasks;
-    using Newtonsoft.Json;
-
-   
     /// <summary>
     ///     Handles calls to the VetCompass clinical coding web service.  ThreadSafe.
     /// </summary>
@@ -72,6 +69,7 @@ namespace VetCompass.Client
         /// </summary>
         public void Start()
         {
+            //todo:Handle this method being called twice by ignoring second call
             SessionId = Guid.NewGuid();
             _sessionAddress = new Uri(_vetcompassAddress + SessionId.ToString() + "/");
             var request = CreateRequest(_sessionAddress);
@@ -270,167 +268,6 @@ namespace VetCompass.Client
         /// <param name="sessionId"></param>
         void Resume(Guid sessionId);
     }
-
-#endif
-    
-#if NET35
-    /// <summary>
-    /// </summary>
-    /// <remarks>Use this interface to mock out your code for testing etc</remarks>
-    public interface ICodingSession
-    {
-        /// <summary>
-        ///     Gets the unique session id
-        /// </summary>
-        Guid SessionId { get; }
-
-        /// <summary>
-        ///     Gets the subject of the coding session
-        /// </summary>
-        CodingSubject Subject { get; }
-
-        /// <summary>
-        ///     Gets if the coding session has faulted.  If true, it's no longer usable
-        /// </summary>
-        bool IsFaulted { get; }
-
-        /// <summary>
-        ///     If IsFaulted == true, this will hold the exception
-        /// </summary>
-        Exception Exception { get; }
-
-        /// <summary>
-        ///     If IsFaulted == true, this may contain an error message from the server (it can be null, ie when contacting the
-        ///     server was impossible)
-        /// </summary>
-        string ServerErrorMessage { get; }
-
-        /// <summary>
-        ///     Queries the web service synchronously
-        /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
-        VeNomQueryResponse QuerySynch(VeNomQuery query);
-
-      
-
-        /// <summary>
-        ///     Creates a new coding session on the webservice
-        /// </summary>
-        void Start();
-
-        /// <summary>
-        ///     Configures this CodingSession to use a already created session
-        /// </summary>
-        /// <param name="sessionId"></param>
-        void Resume(Guid sessionId);
-
-        void QueryAsync(VeNomQuery query, Action<VeNomQueryResponse> callback);
-    }
-
-    /// <summary>
-    ///     Handles calls to the VetCompass clinical coding web service.  ThreadSafe.
-    /// </summary>
-    public class CodingSession : ICodingSession
-    {
-        private readonly Guid _clientId;
-
-        private readonly CookieContainer _cookies = new CookieContainer();
-            //this is how to share the session cookies (if any)
-
-        private readonly string _sharedSecret;
-        private readonly Uri _vetcompassAddress;
-        private Uri _sessionAddress;
-       
-
-        /// <summary>
-        ///     Instantiates a coding session object
-        /// </summary>
-        /// <param name="clientId"></param>
-        /// <param name="sharedSecret"></param>
-        /// <param name="subject"></param>
-        /// <param name="vetcompassAddress"></param>
-        public CodingSession(Guid clientId, string sharedSecret, CodingSubject subject, Uri vetcompassAddress)
-        {
-            _vetcompassAddress = vetcompassAddress;
-            _clientId = clientId;
-            _sharedSecret = sharedSecret;
-            Subject = subject;
-        }
-
-        public Guid SessionId { get; private set; }
-        public CodingSubject Subject { get; private set; }
-        public bool IsFaulted { get; private set; }
-        public Exception Exception { get; private set; }
-        public string ServerErrorMessage { get; private set; }
-
-        public VeNomQueryResponse QuerySynch(VeNomQuery query)
-        {
-            var response = CreateQueryRequest(query).GetResponse(); 
-            return DeserialiseQueryReponse(response);
-        }
-
-        public void QueryAsync(VeNomQuery query, Action<VeNomQueryResponse> callback)
-        {
-            var request = CreateQueryRequest(query);
-            //send the request in as the callback state, then the result is accessible
-            request.BeginGetResponse(asynchResult =>
-            {
-                var webRequest = (WebRequest) asynchResult.AsyncState;
-                var webResponse = webRequest.GetResponse();
-                var queryResponse = DeserialiseQueryReponse(webResponse);
-                callback(queryResponse);
-            }, request);
-        }
-
-        private HttpWebRequest CreateQueryRequest(VeNomQuery query)
-        {
-            var encoded = HttpUtility.UrlEncode(query.SearchExpression);
-            var request = CreateRequest(new Uri(_sessionAddress + "search/" + encoded));
-            request.Method = WebRequestMethods.Http.Get;
-            request.Accept = "application/json";
-            return request;
-        }
-
-
-        /// <summary>
-        ///     Creates a HttpWebRequest to the uri and prepares all the common code
-        /// </summary>
-        /// <param name="uri"></param>
-        /// <returns></returns>
-        private HttpWebRequest CreateRequest(Uri uri)
-        {
-            return RequestFactory.CreateRequest(uri, _cookies, _clientId);
-        }
-
-        public void Start()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Resume(Guid sessionId)
-        {
-            SessionId = sessionId;
-            _sessionAddress = new Uri(_vetcompassAddress + sessionId.ToString() + "/");
-        }
-
-        /// <summary>
-        ///     Deserialises the web service's query response
-        /// </summary>
-        /// <param name="response"></param>
-        /// <returns></returns>
-        private VeNomQueryResponse DeserialiseQueryReponse(WebResponse response)
-        {
-            using (var stream = response.GetResponseStream())
-            {
-                using (var sr = new StreamReader(stream, Encoding.UTF8))
-                {
-                    var responseContent = sr.ReadToEnd();
-                    return JsonConvert.DeserializeObject<VeNomQueryResponse>(responseContent);
-                }
-            }
-        }
-    }
-
-#endif
 }
+
+#endif
