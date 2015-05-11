@@ -272,30 +272,30 @@ namespace VetCompass.Client
         }
 #endif
         /// <summary>
-        /// Returns either the results of the task, or a cancellation after a timeout.  Which ever is first
+        /// Returns either the results of the original task, or a cancellation after a timeout.  Which ever is first
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="task"></param>
+        /// <param name="originalTask"></param>
         /// <param name="cancellationTokenSource"></param>
         /// <param name="timeMilliseconds"></param>
         /// <returns></returns>
-        public static Task<T> CancelAfter<T>(this Task<T> task, CancellationTokenSource cancellationTokenSource,
+        public static Task<T> CancelAfter<T>(this Task<T> originalTask, CancellationTokenSource cancellationTokenSource,
             int timeMilliseconds)
         {
             var delayTask = Delay(timeMilliseconds);
             delayTask.ContinueWith(_ =>
             {
-                if (!task.IsCompleted)
+                if (!originalTask.IsCompleted)
                 {
                     cancellationTokenSource.Cancel();
                 }
             });
 
             return Task.Factory
-                .ContinueWhenAny(new Task[] {delayTask, task}, completedTask => completedTask)
+                .ContinueWhenAny(new Task[] {delayTask, originalTask}, completedTask => completedTask)
                 .FlatMapSuccess(completedTask =>
             {
-                if (completedTask == task) return task;
+                if (completedTask == originalTask) return originalTask;
                 else
                 {
                     //timeout occurred
