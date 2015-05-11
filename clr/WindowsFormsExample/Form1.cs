@@ -53,13 +53,18 @@ using System.Threading.Tasks;
             task.ContinueWith(HandleTaskResult, TaskScheduler.FromCurrentSynchronizationContext());
 #endif
 #if NET35
+            //call asynchronously to the webservice, to keep the UI responsive, the callback handles the marshalling back to the UI thread
             _session.QueryAsync(new VeNomQuery(text), MarshallQueryResponse);
 #endif
         }
 
+        /// <summary>
+        /// A callback method for handling the webservice's response to a query being available. This handles the marshalling to the UI thread
+        /// </summary>
+        /// <param name="queryResponse"></param>
         private void MarshallQueryResponse(VeNomQueryResponse queryResponse)
         {
-            if (InvokeRequired) this.Invoke(() => BindResults(queryResponse)); //invoke on the UI thread
+            if (InvokeRequired) this.Invoke(() => BindResults(queryResponse)); //invoke on the UI thread if required
             else BindResults(queryResponse);
         }
 
@@ -83,7 +88,10 @@ using System.Threading.Tasks;
           
         }
 #endif
-
+        /// <summary>
+        /// Binds the query response to the UI
+        /// </summary>
+        /// <param name="queryResponse"></param>
         private void BindResults(VeNomQueryResponse queryResponse)
         {
             if (txtQuery.Text != queryResponse.Query.SearchExpression) return; //guard against multiple queries in quick succession coming out of order
