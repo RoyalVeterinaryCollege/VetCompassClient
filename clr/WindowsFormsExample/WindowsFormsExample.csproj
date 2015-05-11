@@ -114,9 +114,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\VetCompassClient\VetCompassClient.csproj">
-      <Project>{EF647900-A307-447C-B5DA-80A7E517A53F}</Project>
-      <Name>VetCompassClient</Name>
+    <ProjectReference Include="..\VetCompassClient.net35\VetCompassClient.net35.csproj">
+      <Project>{a67b6667-67d8-4773-8e2a-efd7e333c222}</Project>
+      <Name>VetCompassClient.net35</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
