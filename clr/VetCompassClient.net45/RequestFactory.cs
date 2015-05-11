@@ -14,7 +14,6 @@ namespace VetCompass.Client
         /// <returns></returns>
         public static HttpWebRequest CreateRequest(Uri uri, CookieContainer cookies, Guid clientId)
         {
-            //todo:Time out
             var request = (HttpWebRequest)WebRequest.Create(uri);
             request.KeepAlive = true;
             request.CookieContainer = cookies;

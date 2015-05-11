@@ -108,7 +108,6 @@ namespace VetCompass.Client
 #if NET45
                 cancellationTokenSource.CancelAfter(Timeout.Value);
 #endif
-
                 _sessionCreationTask = webTask.CancelAfter(cancellationTokenSource, Timeout.Value);
             }
         }
