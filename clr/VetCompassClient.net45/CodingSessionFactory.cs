@@ -13,16 +13,18 @@ namespace VetCompass.Client
         /// Starts a new coding session which is registered on the web service
         /// </summary>
         /// <param name="subject"></param>
+        /// <param name="timeoutMilliseconds"></param>
         /// <returns></returns>
-        ICodingSession StartCodingSession(CodingSubject subject);
+        ICodingSession StartCodingSession(CodingSubject subject, int? timeoutMilliseconds = null);
 
         /// <summary>
         /// Resumes a pre-registered coding session.  This assumes a session with that sessionId has been started with a previous call
         /// </summary>
         /// <param name="subject"></param>
         /// <param name="sessionId"></param>
+        /// <param name="timeoutMilliseconds"></param>
         /// <returns></returns>
-        ICodingSession ResumeCodingSession(CodingSubject subject, Guid sessionId);
+        ICodingSession ResumeCodingSession(CodingSubject subject, Guid sessionId, int? timeoutMilliseconds = null);
     }
 
     /// <summary>
@@ -49,16 +51,22 @@ namespace VetCompass.Client
             _vetcompassWebserviceBase = expectedFormatForUri;
         }
 
-        public ICodingSession StartCodingSession(CodingSubject subject)
+        public ICodingSession StartCodingSession(CodingSubject subject, int? timeoutMilliseconds = null)
         {
-            var session =  new CodingSession(_clientId, _sharedSecret, subject, _vetcompassWebserviceBase);
+            var session = new CodingSession(_clientId, _sharedSecret, subject, _vetcompassWebserviceBase)
+            {
+                Timeout = timeoutMilliseconds
+            };
             session.Start();
             return session;
         }
 
-        public ICodingSession ResumeCodingSession(CodingSubject subject, Guid sessionId)
+        public ICodingSession ResumeCodingSession(CodingSubject subject, Guid sessionId, int? timeoutMilliseconds = null)
         {
-            var session =  new CodingSession(_clientId, _sharedSecret, subject, _vetcompassWebserviceBase);
+            var session = new CodingSession(_clientId, _sharedSecret, subject, _vetcompassWebserviceBase)
+            {
+                Timeout = timeoutMilliseconds
+            };
             session.Resume(sessionId);
             return session;
         }

@@ -6,6 +6,7 @@ using VetCompass.Client;
 
 namespace WindowsFormsExample
 {
+    //This is compiled against .net 3.5 but should compile without modication against .net 4.5 as well.  Simply build against 4.5 and reference VetCompassClient.net45 instead
 
     public partial class Form1 : Form
     {
@@ -17,7 +18,7 @@ namespace WindowsFormsExample
             InitializeComponent();
 
             var client = new CodingSessionFactory(Guid.NewGuid(), "not very secret", new Uri("http://10.144.3.72:5000/api/1.0/session/")); //new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
-            _session = client.StartCodingSession(new CodingSubject { CaseNumber = "winforms testing case" });
+            _session = client.StartCodingSession(new CodingSubject { CaseNumber = "winforms testing case" },1);
             //_session = client.ResumeCodingSession(new CodingSubject {CaseNumber = "winforms testing case"},(Guid) new GuidConverter().ConvertFromString("5537ade0-b91d-11e4-9f5c-0800200c9a66"));
             _source.AllowEdit = false;
             _source.AllowNew = false;
@@ -53,7 +54,7 @@ namespace WindowsFormsExample
         {
             switch (task.Status)
             {
-                case TaskStatus.Canceled: //handle cancellation
+                case TaskStatus.Canceled: //handle cancellation (this is a timeout)
                     return;
                 case TaskStatus.Faulted:
                     //you can access the task.Exception here

@@ -3,9 +3,11 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Web;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace VetCompass.Client 
 {
@@ -63,6 +65,11 @@ namespace VetCompass.Client
         public CodingSubject Subject { get; private set; }
 
         /// <summary>
+        /// Gets or sets an optional timeout (milliseconds) for calls to the webservice.  Defaults to the .net WebRequest timeout
+        /// </summary>
+        public int? Timeout { get; set; }
+
+        /// <summary>
         ///     Creates a new coding session on the webservice
         /// </summary>
         public void Start()
@@ -84,11 +91,26 @@ namespace VetCompass.Client
             hmacHasher.HashRequest(request, _clientId, _sharedSecret, content);
 
             //This is a pipeline of asynch tasks which create a session on the server or results in the coding session being faulted
-            _sessionCreationTask = request
-                .GetRequestStreamAsync() //the upload request stream actually tries to contact the server, so asynch from here
-                .MapSuccess(stream => HandleRequestPosting(request, stream, requestBytes)) //handle successful contact with server by writing request
-                .FlatMapSuccess(postedRequest => postedRequest.GetResponseAsync()) //handle successfully writing request by getting asynch response 
+           
+            //webrequest asynch methods require caller to implement timeouts, set up cancellation tokens
+            var cancellationTokenSource = new CancellationTokenSource();
+            var ct = cancellationTokenSource.Token;
+
+            var webTask = Task.Factory
+                .StartNew(() => request.GetRequestStreamAsync(),ct) //GetRequestStreamAsync performs quite a lot of synchronous work, so call it inside a task: see https://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.begingetrequeststream(v=vs.110).aspx
+                .Unwrap()
+                .MapSuccess(stream => HandleRequestPosting(request, stream, requestBytes),ct) //handle successful contact with server by writing request
+                .FlatMapSuccess(postedRequest => postedRequest.GetResponseAsync(),ct) //handle successfully writing request by getting asynch response 
                 .ActOnFailure(HandleSessionCreationFailure); //or handle any antecedent failure
+
+            if (Timeout.HasValue)
+            {
+#if NET45
+                cancellationTokenSource.CancelAfter(Timeout.Value);
+#endif
+
+                _sessionCreationTask = webTask.CancelAfter(cancellationTokenSource, Timeout.Value);
+            }
         }
 
         /// <summary>
@@ -110,7 +132,13 @@ namespace VetCompass.Client
         /// <returns></returns>
         public Task<VeNomQueryResponse> QueryAsync(VeNomQuery query)
         {
-            return _sessionCreationTask.FlatMapSuccess(_ => Query(query));
+            var cancellationTokenSource = new CancellationTokenSource();
+            var task = _sessionCreationTask.FlatMapSuccess(_ => Query(query), cancellationTokenSource.Token);
+
+            if(Timeout.HasValue)
+                return task.CancelAfter(cancellationTokenSource,Timeout.Value);
+
+            return task;
         }
 
         /// <summary>
@@ -129,8 +157,6 @@ namespace VetCompass.Client
 #if NET35
             _sessionCreationTask = TaskHelper.FromResult(0);
 #endif
-
-            //throw new NotImplementedException();
         }
 
         /// <summary>
@@ -249,6 +275,11 @@ namespace VetCompass.Client
         ///     server was impossible)
         /// </summary>
         string ServerErrorMessage { get; }
+
+        /// <summary>
+        /// Gets or sets an optional timeout (milliseconds) for calls to the webservice.  Defaults to the .net WebRequest timeout
+        /// </summary>
+        int? Timeout { get; set; }
 
         /// <summary>
         ///     Queries the web service synchronously

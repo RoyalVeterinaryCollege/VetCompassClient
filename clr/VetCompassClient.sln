@@ -5,7 +5,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleExample", "ConsoleEx
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VetCompassClient.Tests", "VetCompassClient.Tests\VetCompassClient.Tests.csproj", "{FDACBF3C-F493-4B2D-AC21-FD9AB7FB10D0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsFormsExample", "WindowsFormsExample\WindowsFormsExample.csproj", "{1B532747-A661-4986-A8BC-CDB0CD119180}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsFormsExample.net35", "WindowsFormsExample\WindowsFormsExample.net35.csproj", "{1B532747-A661-4986-A8BC-CDB0CD119180}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VetCompassClient.net35", "VetCompassClient.net35\VetCompassClient.net35.csproj", "{A67B6667-67D8-4773-8E2A-EFD7E333C222}"
 EndProject
