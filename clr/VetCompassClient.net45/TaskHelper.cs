@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Runtime.Remoting.Channels;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
+using Timer = System.Timers.Timer;
 
 namespace VetCompass.Client
 {
@@ -25,7 +24,8 @@ namespace VetCompass.Client
         }
 
         /// <summary>
-        ///  Maps a successfully completed task, else retains the original cancellation or fault.  This overload permits cancellation.
+        ///     Maps a successfully completed task, else retains the original cancellation or fault.  This overload permits
+        ///     cancellation.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <typeparam name="U"></typeparam>
@@ -37,7 +37,6 @@ namespace VetCompass.Client
         {
             var nextTask = task.ContinueWith(innerTask =>
             {
-               
                 var tcs = new TaskCompletionSource<U>();
                 if (ct.IsCancellationRequested)
                 {
@@ -119,7 +118,7 @@ namespace VetCompass.Client
                 }
 
                 return tcs.Task;
-            },ct).Unwrap().Unwrap();
+            }, ct).Unwrap().Unwrap();
         }
 
         /// <summary>
@@ -147,7 +146,8 @@ namespace VetCompass.Client
         }
 
         /// <summary>
-        ///     Flat maps a succesful Task to a new Task[U], else retains the original cancellation or fault.  This overload permits cancellation.
+        ///     Flat maps a succesful Task to a new Task[U], else retains the original cancellation or fault.  This overload
+        ///     permits cancellation.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="task"></param>
@@ -187,9 +187,9 @@ namespace VetCompass.Client
                             break;
                     }
                 }
-               
+
                 return tcs.Task;
-            },ct).Unwrap().Unwrap();
+            }, ct).Unwrap().Unwrap();
         }
 
         /// <summary>
@@ -240,14 +240,14 @@ namespace VetCompass.Client
         }
 
         /// <summary>
-        /// A method which mimics the .net 4.5 Task.Delay task
+        ///     A method which mimics the .net 4.5 Task.Delay task
         /// </summary>
         /// <param name="timeoutMilliseconds"></param>
         /// <returns></returns>
         public static Task Delay(int timeoutMilliseconds)
         {
             var tcs = new TaskCompletionSource<object>();
-            var timer = new System.Timers.Timer(timeoutMilliseconds);
+            var timer = new Timer(timeoutMilliseconds);
 
             timer.Elapsed += (sender, e) =>
             {
@@ -260,19 +260,20 @@ namespace VetCompass.Client
         }
 #endif
 #if NET45
-        
-        /// <summary>
-        /// Wrapper function for Task.Delay
-        /// </summary>
-        /// <param name="timeoutMilliseconds"></param>
-        /// <returns></returns>
+
+    /// <summary>
+    /// Wrapper function for Task.Delay
+    /// </summary>
+    /// <param name="timeoutMilliseconds"></param>
+    /// <returns></returns>
         public static Task Delay(int timeoutMilliseconds)
         {
             return Task.Delay(timeoutMilliseconds);
         }
 #endif
+
         /// <summary>
-        /// Returns either the results of the original task, or a cancellation after a timeout.  Which ever is first
+        ///     Returns either the results of the original task, or a cancellation after a timeout.  Which ever is first
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="originalTask"></param>
@@ -292,18 +293,15 @@ namespace VetCompass.Client
             });
 
             return Task.Factory
-                .ContinueWhenAny(new Task[] {delayTask, originalTask}, completedTask => completedTask)
+                .ContinueWhenAny(new[] {delayTask, originalTask}, completedTask => completedTask)
                 .FlatMapSuccess(completedTask =>
-            {
-                if (completedTask == originalTask) return originalTask;
-                else
                 {
+                    if (completedTask == originalTask) return originalTask;
                     //timeout occurred
                     var tcs = new TaskCompletionSource<T>();
                     tcs.SetCanceled();
                     return tcs.Task;
-                }
-            });
+                });
         }
     }
 }

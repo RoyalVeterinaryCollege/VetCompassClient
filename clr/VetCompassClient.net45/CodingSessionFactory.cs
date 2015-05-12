@@ -28,7 +28,7 @@ namespace VetCompass.Client
     }
 
     /// <summary>
-    /// A factory for starting or resuming clinical coding sessions with the VetCompass clinical coding web service.  Thread safe.
+    /// A factory for starting or resuming clinical coding sessions with the VetCompass clinical coding web service.  Thread safe. Can be a singleton.
     /// </summary>
     public class CodingSessionFactory : ICodingSessionFactory
     {
@@ -140,5 +140,21 @@ namespace VetCompass.Client
         public int DataDictionaryId { get; set; }
         public string Name { get; set; }
         public string Subset { get; set; }
+    }
+
+    /// <summary>
+    /// A dto representing a code selected by a user
+    /// </summary>
+    public class VetCompassCodeSelection
+    {
+        /// <summary>
+        /// The string that was in the search box when the user made the selection
+        /// </summary>
+        public string SearchExpression { get; set; }
+
+        /// <summary>
+        /// The Id of the code they selected
+        /// </summary>
+        public int VeNomId { get; set; }
     }
 }

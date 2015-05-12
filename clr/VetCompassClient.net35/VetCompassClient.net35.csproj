@@ -90,8 +90,8 @@
     <Compile Include="..\VetCompassClient.net45\HMACRequestHasher.cs">
       <Link>HMACRequestHasher.cs</Link>
     </Compile>
-    <Compile Include="..\VetCompassClient.net45\RequestFactory.cs">
-      <Link>RequestFactory.cs</Link>
+    <Compile Include="..\VetCompassClient.net45\RequestBackport.cs">
+      <Link>RequestBackport.cs</Link>
     </Compile>
     <Compile Include="..\VetCompassClient.net45\RequestHelper.cs">
       <Link>RequestHelper.cs</Link>

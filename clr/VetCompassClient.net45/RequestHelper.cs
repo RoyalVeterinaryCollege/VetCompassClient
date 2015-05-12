@@ -1,56 +1,95 @@
-﻿#if NET35
-
 using System;
 using System.IO;
 using System.Net;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace VetCompass.Client
 {
-    /// <summary>
-    /// This backports some methods on WebRequest available in .net 4.5 into .net 3.5
-    /// </summary>
     public static class RequestHelper
     {
-
         /// <summary>
-        ///     This back ports the asynch upload method from .net 4.5 to .net 3.5
+        ///     Creates a HttpWebRequest to the uri and prepares all the common code
         /// </summary>
-        /// <param name="request"></param>
+        /// <param name="uri"></param>
+        /// <param name="cookies"></param>
+        /// <param name="clientId"></param>
         /// <returns></returns>
-        public static Task<Stream> GetRequestStreamAsync(this WebRequest request)
+        public static HttpWebRequest CreateRequest(Uri uri, CookieContainer cookies, Guid clientId)
         {
-            //function taking an completed asynch callback to create an upload stream, and returns that stream
-            Func<IAsyncResult, WebRequest> f = asynchResult =>
-            {
-                var intialRequest = (WebRequest) asynchResult.AsyncState;
-                return intialRequest;
-            };
+            var request = (HttpWebRequest)WebRequest.Create(uri);
+            request.KeepAlive = true;
+            request.CookieContainer = cookies;
+            SetDateHeader(request);
+            SetClientHeader(request, clientId);
+            return request;
+        }
 
-            return Task.Factory
-                .FromAsync(request.BeginGetRequestStream, f, request)
-                .MapSuccess(initialRequest => initialRequest.GetRequestStream()); //do the request inside a task to prevent exceptions taking down the appdomain
+        public static void SetClientHeader(HttpWebRequest request, Guid clientId)
+        {
+            request.Headers.Add(Constants.VetCompass_clientid_Header, clientId.ToString());
         }
 
         /// <summary>
-        ///     This back ports the asynch response method from .net 4.5 to .net 3.5
+        ///     Sets the vetcompass request date header
         /// </summary>
         /// <param name="request"></param>
-        /// <returns></returns>
-        public static Task<WebResponse> GetResponseAsync(this WebRequest request)
+        public static void SetDateHeader(WebRequest request)
         {
-            //function taking an completed asynch callback which represents a completed request and gets that request
-            Func<IAsyncResult, WebRequest> f = asynchResult =>
-            {
-                var intialRequest = (WebRequest)asynchResult.AsyncState;
-                return intialRequest;
-            };
+            //storing the date the request was made reduces the window for replay attacks
+            //http://stackoverflow.com/questions/44391/how-do-i-prevent-replay-attacks
+            var date = DateTime.UtcNow.ToString("o"); //date format = ISO 8601, http://en.wikipedia.org/wiki/ISO_8601
+            request.Headers.Add(Constants.VetCompass_Date_Header, date);
+        }
 
-            return Task.Factory
-                .FromAsync(request.BeginGetResponse, f, request)
-                .MapSuccess(completedRequest => request.GetResponse()); //second task gets the response.  It's done in a second task as GetResponse can actually throw an error, and we want this to happen inside a task (rather than in the callback which will take down the appdomain!)
+        public static byte[] PreparePostRequest(WebRequest request, object body, Guid clientId, string sharedSecret)
+        {
+            request.ContentType = "application/json";
+            request.Method = WebRequestMethods.Http.Post;
+            var contentString = JsonConvert.SerializeObject(body);
+            var requestBytes = Encoding.UTF8.GetBytes(contentString);
+            request.ContentLength = requestBytes.Length;
+
+            //HMAC hash the request
+            var hmacHasher = new HMACRequestHasher();
+            hmacHasher.HashRequest(request, clientId, sharedSecret, contentString);
+            return requestBytes;
+        }
+
+        /// <summary>
+        /// This is a pipeline of asynch tasks which post the web request 
+        /// </summary>
+        /// <param name="request">WebRequest the prepared request</param>
+        /// <param name="ct">CancellationToken a cancellation token for aborting the request</param>
+        /// <param name="requestBytes">byte[] the UTF encoded body of the request</param>
+        /// <param name="exceptionHandler">an exception handler to invoke in the case of error</param>
+        /// <returns></returns>
+        public static Task<WebResponse> PostAsynchronously(WebRequest request, CancellationToken ct, byte[] requestBytes, Action<AggregateException> exceptionHandler)
+        {
+            var webTask = Task.Factory
+                .StartNew(() => request.GetRequestStreamAsync(), ct) //GetRequestStreamAsync performs quite a lot of synchronous work, so call it inside a task: see https://msdn.microsoft.com/en-us/library/system.net.httpwebrequest.begingetrequeststream(v=vs.110).aspx
+                .Unwrap()
+                .MapSuccess(stream => HandleRequestPosting(request, stream, requestBytes), ct) //handle successful contact with server by writing request
+                .FlatMapSuccess(postedRequest => postedRequest.GetResponseAsync(), ct) //handle successfully writing request by getting asynch response 
+                .ActOnFailure(exceptionHandler); //or handle any antecedent failure
+
+            return webTask;
+        }
+
+        /// <summary>
+        /// Writes the request to the upload stream
+        /// </summary>
+        /// <param name="requestBytes"></param>
+        /// <returns></returns>
+        private static WebRequest HandleRequestPosting(WebRequest request, Stream stream, byte[] requestBytes)
+        {
+            using (stream)
+            {
+                stream.Write(requestBytes, 0, requestBytes.Length);
+            }
+            return request;
         }
     }
 }
-
-#endif
