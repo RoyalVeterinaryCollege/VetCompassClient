@@ -81,6 +81,7 @@ namespace VetCompass.Client
         {
             if (IsStarted) return; //guard Start being called twice
 
+            
             SessionId = Guid.NewGuid();
             _sessionAddress = new Uri(_vetcompassAddress + SessionId.ToString() + "/");
 
@@ -95,6 +96,7 @@ namespace VetCompass.Client
             //Asynchronously post the request
             var webTask = RequestHelper.PostAsynchronously(request, ct, requestBytes, HandleSessionCreationFailure);
             _sessionCreationTask = HonourTimeout(webTask, cancellationTokenSource);
+            IsStarted = true;
         }
 
         /// <summary>
@@ -151,7 +153,7 @@ namespace VetCompass.Client
         /// </summary>
         /// <param name="selection">VetCompassCodeSelection The details of their selection</param>
         /// <returns></returns>
-        public Task<WebResponse> RegisterSelection(VetCompassCodeSelection selection)
+        public Task<HttpWebResponse> RegisterSelection(VetCompassCodeSelection selection)
         {
             if(!IsStarted) throw new Exception("Coding session not started");
             if(IsFaulted) throw new Exception("Coding session is faulted");
@@ -159,9 +161,9 @@ namespace VetCompass.Client
             return _sessionCreationTask.FlatMapSuccess(_ => PostSelection(selection));
         }
 
-        private Task<WebResponse> PostSelection(VetCompassCodeSelection selection)
+        private Task<HttpWebResponse> PostSelection(VetCompassCodeSelection selection)
         {
-            var selectionAddress = new Uri(_sessionAddress + "/selection");
+            var selectionAddress = new Uri(_sessionAddress + "selection");
 
             //prepare the request
             var request = CreateRequest(selectionAddress);
@@ -173,7 +175,7 @@ namespace VetCompass.Client
 
             //Asynchronously post the request
             var webTask = RequestHelper.PostAsynchronously(request, ct, requestBytes, HandleSessionCreationFailure);
-            return HonourTimeout(webTask, cancellationTokenSource);
+            return HonourTimeout(webTask, cancellationTokenSource).MapSuccess(response => (HttpWebResponse)response);
         }
 
         /// <summary>
@@ -340,6 +342,6 @@ namespace VetCompass.Client
         /// </summary>
         /// <param name="selection">VetCompassCodeSelection The details of their selection</param>
         /// <returns></returns>
-        Task<WebResponse> RegisterSelection(VetCompassCodeSelection selection);
+        Task<HttpWebResponse> RegisterSelection(VetCompassCodeSelection selection);
     }
 }
