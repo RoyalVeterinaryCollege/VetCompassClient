@@ -4,12 +4,11 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using Newtonsoft.Json;
-using System.Threading.Tasks;
-using System.Xml;
 
-namespace VetCompass.Client 
+namespace VetCompass.Client
 {
     /// <summary>
     ///     Handles calls to the VetCompass clinical coding web service.  ThreadSafe.
@@ -17,7 +16,10 @@ namespace VetCompass.Client
     public class CodingSession : ICodingSession
     {
         private readonly Guid _clientId;
-        private readonly CookieContainer _cookies = new CookieContainer(); //this is how to share the session cookies (if any)
+
+        private readonly CookieContainer _cookies = new CookieContainer();
+            //this is how to share the session cookies (if any)
+
         private readonly string _sharedSecret;
         private readonly Uri _vetcompassAddress;
         private Uri _sessionAddress;
@@ -44,7 +46,7 @@ namespace VetCompass.Client
         public bool IsFaulted { get; private set; }
 
         /// <summary>
-        /// Gets if the session has been started
+        ///     Gets if the session has been started
         /// </summary>
         public bool IsStarted { get; private set; }
 
@@ -70,7 +72,8 @@ namespace VetCompass.Client
         public CodingSubject Subject { get; private set; }
 
         /// <summary>
-        /// Gets or sets an optional timeout (milliseconds) for calls to the webservice.  Defaults to the .net WebRequest timeout
+        ///     Gets or sets an optional timeout (milliseconds) for calls to the webservice.  Defaults to the .net WebRequest
+        ///     timeout
         /// </summary>
         public int? Timeout { get; set; }
 
@@ -81,14 +84,13 @@ namespace VetCompass.Client
         {
             if (IsStarted) return; //guard Start being called twice
 
-            
             SessionId = Guid.NewGuid();
             _sessionAddress = new Uri(_vetcompassAddress + SessionId.ToString() + "/");
 
             //prepare the initial session creation post
             var request = CreateRequest(_sessionAddress);
-            var requestBytes = RequestHelper.PreparePostRequest(request,Subject,_clientId,_sharedSecret);
-           
+            var requestBytes = RequestHelper.PreparePostRequest(request, Subject, _clientId, _sharedSecret);
+
             //webrequest asynch methods require caller to implement timeouts, set up cancellation tokens
             var cancellationTokenSource = new CancellationTokenSource();
             var ct = cancellationTokenSource.Token;
@@ -100,7 +102,8 @@ namespace VetCompass.Client
         }
 
         /// <summary>
-        /// Queries the VetCompass webservice synchronously.  This will block your thread, instead prefer QueryAsync.  This method will also throw an exception on a failure. 
+        ///     Queries the VetCompass webservice synchronously.  This will block your thread, instead prefer QueryAsync.  This
+        ///     method will also throw an exception on a failure.
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
@@ -108,11 +111,12 @@ namespace VetCompass.Client
         {
             var queryAsync = QueryAsync(query);
             Task.WaitAny(queryAsync); //will throw on a task fault
-            return queryAsync.Result; 
+            return queryAsync.Result;
         }
 
         /// <summary>
-        /// Asynchronously queries the VetCompass webservice.  The task can be used for error detection/handling.  This call won't block or throw an exception.
+        ///     Asynchronously queries the VetCompass webservice.  The task can be used for error detection/handling.  This call
+        ///     won't block or throw an exception.
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
@@ -121,8 +125,8 @@ namespace VetCompass.Client
             var cancellationTokenSource = new CancellationTokenSource();
             var task = _sessionCreationTask.FlatMapSuccess(_ => Query(query), cancellationTokenSource.Token);
 
-            if(Timeout.HasValue)
-                return task.CancelAfter(cancellationTokenSource,Timeout.Value);
+            if (Timeout.HasValue)
+                return task.CancelAfter(cancellationTokenSource, Timeout.Value);
 
             return task;
         }
@@ -149,14 +153,14 @@ namespace VetCompass.Client
         }
 
         /// <summary>
-        /// Informs the web service that the user has selected a code
+        ///     Informs the web service that the user has selected a code
         /// </summary>
         /// <param name="selection">VetCompassCodeSelection The details of their selection</param>
         /// <returns></returns>
         public Task<HttpWebResponse> RegisterSelection(VetCompassCodeSelection selection)
         {
-            if(!IsStarted) throw new Exception("Coding session not started");
-            if(IsFaulted) throw new Exception("Coding session is faulted");
+            if (!IsStarted) throw new Exception("Coding session not started");
+            if (IsFaulted) throw new Exception("Coding session is faulted");
 
             return _sessionCreationTask.FlatMapSuccess(_ => PostSelection(selection));
         }
@@ -175,16 +179,17 @@ namespace VetCompass.Client
 
             //Asynchronously post the request
             var webTask = RequestHelper.PostAsynchronously(request, ct, requestBytes, HandleSessionCreationFailure);
-            return HonourTimeout(webTask, cancellationTokenSource).MapSuccess(response => (HttpWebResponse)response);
+            return HonourTimeout(webTask, cancellationTokenSource).MapSuccess(response => (HttpWebResponse) response);
         }
 
         /// <summary>
-        /// Implements a timeout on requests (if one was required)
+        ///     Implements a timeout on requests (if one was required)
         /// </summary>
         /// <param name="webTask"></param>
         /// <param name="cancellationTokenSource"></param>
         /// <returns>A Task which will cancel after the requested timeout period</returns>
-        private Task<WebResponse> HonourTimeout(Task<WebResponse> webTask, CancellationTokenSource cancellationTokenSource)
+        private Task<WebResponse> HonourTimeout(Task<WebResponse> webTask,
+            CancellationTokenSource cancellationTokenSource)
         {
             //set timeout if nec
             if (Timeout.HasValue)
@@ -237,7 +242,7 @@ namespace VetCompass.Client
         }
 
         /// <summary>
-        /// This does the actual query call to the server
+        ///     This does the actual query call to the server
         /// </summary>
         /// <param name="query"></param>
         /// <returns></returns>
@@ -268,8 +273,6 @@ namespace VetCompass.Client
             }
         }
     }
-
-  
 
     /// <summary>
     /// </summary>
@@ -303,12 +306,13 @@ namespace VetCompass.Client
         string ServerErrorMessage { get; }
 
         /// <summary>
-        /// Gets or sets an optional timeout (milliseconds) for calls to the webservice.  Defaults to the .net WebRequest timeout
+        ///     Gets or sets an optional timeout (milliseconds) for calls to the webservice.  Defaults to the .net WebRequest
+        ///     timeout
         /// </summary>
         int? Timeout { get; set; }
 
         /// <summary>
-        /// Gets if the session has been started
+        ///     Gets if the session has been started
         /// </summary>
         bool IsStarted { get; }
 
@@ -338,7 +342,7 @@ namespace VetCompass.Client
         void Resume(Guid sessionId);
 
         /// <summary>
-        /// Informs the web service that the user has selected a code
+        ///     Informs the web service that the user has selected a code
         /// </summary>
         /// <param name="selection">VetCompassCodeSelection The details of their selection</param>
         /// <returns></returns>
