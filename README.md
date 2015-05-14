@@ -8,8 +8,8 @@ If you are using a different technology on your client you will still be able to
 
 It is made available under the permissive [MIT licence](LICENSE)
 
-
-```c#
+It's easy to use:
+```csharp
 ICodingSessionFactory client = new CodingSessionFactory(clientId, sharedSecret, new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
 ICodingSession session = client.StartCodingSession(new CodingSubject { CaseNumber = "fluffy01",IsFemale = true,VeNomSpeciesCode = 1232}, timeoutMilliseconds:700);
 Task<VeNomQueryResponse> futureResults = session.QueryAsync(new VeNomQuery("hit by car"));
