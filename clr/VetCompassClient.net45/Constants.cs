@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace VetCompass.Client
+﻿namespace VetCompass.Client
 {
     /// <summary>
-    /// Some constant literals for communicating with the web services
+    ///     Some constant literals for communicating with the web services
     /// </summary>
     public static class Constants
     {
@@ -21,8 +16,8 @@ namespace VetCompass.Client
         public const string VetCompass_HMAC_Header = "vetcompass-hmac-authorisation";
 
         /// <summary>
-        /// Header key for the client id
+        ///     Header key for the client id
         /// </summary>
-        public const string VetCompass_clientid_Header =  "vetcompass-clientid";
+        public const string VetCompass_clientid_Header = "vetcompass-clientid";
     }
 }

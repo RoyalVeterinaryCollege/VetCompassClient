@@ -36,11 +36,6 @@ namespace VetCompass.Client
         private readonly string _sharedSecret;
         private readonly Uri _vetcompassWebserviceBase;
 
-        public CodingSessionFactory()
-        {
-            //todo: get input from config
-        }
-
         /// <summary>
         /// Instantiates the coding session factory.  This class is threadsafe and can be used as a singleton.
         /// </summary>
@@ -165,8 +160,10 @@ namespace VetCompass.Client
     /// </summary>
     public class VetCompassCode
     {
-        //todo:rename to VeNomId?
-        public int DataDictionaryId { get; set; }
+        /// <summary>
+        /// Gets or sets the VeNomId of the code
+        /// </summary>
+        public int VeNomId { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the code

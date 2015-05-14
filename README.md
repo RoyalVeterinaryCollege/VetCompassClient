@@ -21,29 +21,31 @@ The API has only 3 methods:
 # How to use the VetCompass client library
 It's easy to use:
 ```csharp
-ICodingSessionFactory client = new CodingSessionFactory(clientId, sharedSecret, new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
+ICodingSessionFactory client = new CodingSessionFactory(clientId, sharedSecret, new Uri("https://vetcompass.herokuapp.com/api/1.0/session/"));
 ICodingSession session = client.StartCodingSession(new CodingSubject { CaseNumber = "fluffy01",IsFemale = true,VeNomSpeciesCode = 1232}, timeoutMilliseconds:700);
 Task<VeNomQueryResponse> futureResults = session.QueryAsync(new VeNomQuery("hit by car"));
 ```
-* You need to arrange a shared secret & clientId Guid with the VetCompass developers in order to authenticate your calls (which is done via [HMAC](http://www.thebuzzmedia.com/designing-a-secure-rest-api-without-oauth-authentication) )
+* You need to arrange a shared secret & clientId Guid with the VetCompass developers
+* Contact RVC to generate these details.  This is necessary in order to authenticate your client (which is done via [HMAC](http://www.thebuzzmedia.com/designing-a-secure-rest-api-without-oauth-authentication) )
 * Add a reference to the client library via nuget.  The package is called VetCompassClient
 * When your end-user has selected a code, remember to call RegisterSelection. The web service relies on these calls to learn the terms that your users use
-* The asynchronous call returns a Task<VeNomQueryResponse>
+* The asynchronous call returns a Task&lt;VeNomQueryResponse&gt;
     * The task will fault on error and this means the CodingSession should be abandoned
     * If the task is cancelled, then a timeout occurred.  You can adjust the timeout via the Timeout property on the CodingSession
-* Prefer the asynchronous method in winforms/WPF application which will keep your UI responsive.  
-* There is an example winforms project which shows how to synchronise back to the UI thread.
+    * If your Start call timed out, you will need to create a new CodingSession
+* Prefer the asynchronous method in winforms/WPF application which will keep your UI responsive  
+* There is an example winforms project which shows how to synchronise back to the UI thread
 
 # A note on developing new versions of the VetCompass client library
 *This section is mainly for developers wishing to make changes/upgrades to the library*
 
-The VetCompassClient targets two versions of .net: 3.5 & 4.5.  There are two projects, one for each version of the framework.  The code base is the same and compiler directives are used where necessary to differentiate different frameworks.  The methodololgy was based on [this accepted answer](http://stackoverflow.com/questions/2923210/conditional-compilation-and-framework-targets) on stackoverflow.
+The VetCompassClient targets two versions of .net: 3.5 & 4.5.  There are two projects, one for each version of the framework.  The code base is the same and compiler directives are used where necessary to differentiate different frameworks.  The methodology was based on [this accepted answer](http://stackoverflow.com/questions/2923210/conditional-compilation-and-framework-targets) on StackOverflow.
 
 VetCompassClient makes use of MS's task library.  This is part of the base classes in .net 4.5 but not in 3.5.  Someone has [back ported](https://www.nuget.org/packages/TaskParallelLibrary/) most of the tasks library into 3.5.  This is a dependency in the 3.5 version but not in 4.5.
 
-Both versions have a dependency is [Json.net](http://www.newtonsoft.com/json) which is fully internalised using the /internalize switch.  
+Both versions have a dependency on [Json.net](http://www.newtonsoft.com/json) which is fully internalised using the /internalize switch.  
 
-Both dependencies are IlMerged into a single dll, one for 3.5 and 1 for 4.5
+All dependencies are IlMerged into a single dll as part of the compilation process. The produces 2 dlls; one for .net 3.5 and one for .net 4.5
 
 ## IlMerge
 
@@ -60,5 +62,3 @@ The msbuild files were altered using [Hanselman's method](http://www.hanselman.c
 * Compile (this produces the dlls in the place that the nuspec expects)
 * Create the .nupkg file. I used [the nuget gui](https://docs.nuget.org/create/using-a-gui-to-build-packages#nuget-package-explorer---gui-tool-for-building-packages)
 * Publish to nuget (File..Publish)
-
-http://stackoverflow.com/questions/2923210/conditional-compilation-and-framework-targets

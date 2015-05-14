@@ -24,13 +24,11 @@ namespace ConsoleExample
             var post = session.RegisterSelection(new VetCompassCodeSelection("rta",results.Results.First().DataDictionaryId));
 
             Console.ReadKey();
-            
         }
-
 
         void ThroughPutTest()
         {
-            var client = new CodingSessionFactory(Guid.NewGuid(), "not very secret", new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
+            var client = new CodingSessionFactory(Guid.NewGuid(), "not very secret", new Uri("https://vetcompass.herokuapp.com/api/1.0/session/"));
             var session = client.StartCodingSession(new CodingSubject { CaseNumber = "noel's testing case" });
             var start = DateTime.Now;
             var results = new List<Task<VeNomQueryResponse>>();
@@ -45,7 +43,6 @@ namespace ConsoleExample
             Console.WriteLine(DateTime.Now - start);
             Console.ReadKey();
         }
-
 
         public static string CreateServiceClientKey()
         {
