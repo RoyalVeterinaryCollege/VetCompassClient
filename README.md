@@ -7,13 +7,6 @@ This project is a client side API to facilitate consumption of the VetCompass cl
 If you are using a different technology on your client you will still be able to consume the web services via http calls using a 3rd library suitable for your platform.
 
 It is made available under the permissive [MIT licence](LICENSE)
-
-It's easy to use:
-```csharp
-ICodingSessionFactory client = new CodingSessionFactory(clientId, sharedSecret, new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
-ICodingSession session = client.StartCodingSession(new CodingSubject { CaseNumber = "fluffy01",IsFemale = true,VeNomSpeciesCode = 1232}, timeoutMilliseconds:700);
-Task<VeNomQueryResponse> futureResults = session.QueryAsync(new VeNomQuery("hit by car"));
-```
 ## A brief note on the web services
 The VetCompass web services support the process of [clinical coding](http://en.wikipedia.org/wiki/Clinical_coder) in the context of veterinary clinics. The web services uses the veterinary-specific [VeNom codes](http://www.venomcoding.org/).  The API works as a web service which can be consumed by 3rd parties who want to enable clinical coding in their applications. Implementors wire up a text box in their system which takes a user’s search input as a string, and send the string to the web service.  The web service sends back an ranked list of codes which are most likely to be the codes that they are looking for.  The user chooses from the initial list, or amends their query to find a different list of codes to choose from.  
 
@@ -26,10 +19,20 @@ The API has only 3 methods:
 * Register a clinical code selection
 
 # How to use the VetCompass client library
-
+It's easy to use:
+```csharp
+ICodingSessionFactory client = new CodingSessionFactory(clientId, sharedSecret, new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
+ICodingSession session = client.StartCodingSession(new CodingSubject { CaseNumber = "fluffy01",IsFemale = true,VeNomSpeciesCode = 1232}, timeoutMilliseconds:700);
+Task<VeNomQueryResponse> futureResults = session.QueryAsync(new VeNomQuery("hit by car"));
+```
+* You need to arrange a shared secret & clientId Guid with the VetCompass developers in order to authenticate your calls (which is done via [HMAC](http://www.thebuzzmedia.com/designing-a-secure-rest-api-without-oauth-authentication) )
 * Add a reference to the client library via nuget.  The package is called VetCompassClient
-* See 
-* You need to arrange a shared secret & clientId Guid with the VetCompass developers
+* When your end-user has selected a code, remember to call RegisterSelection. The web service relies on these calls to learn the terms that your users use
+* The asynchronous call returns a Task<VeNomQueryResponse>
+    * The task will fault on error and this means the CodingSession should be abandoned
+    * If the task is cancelled, then a timeout occurred.  You can adjust the timeout via the Timeout property on the CodingSession
+* Prefer the asynchronous method in winforms/WPF application which will keep your UI responsive.  
+* There is an example winforms project which shows how to synchronise back to the UI thread.
 
 # A note on developing new versions of the VetCompass client library
 *This section is mainly for developers wishing to make changes/upgrades to the library*
