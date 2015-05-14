@@ -21,7 +21,7 @@ namespace WindowsFormsExample
             InitializeComponent();
 
             var client = new CodingSessionFactory(Guid.NewGuid(), "not very secret", new Uri("http://192.168.1.199:5000/api/1.0/session/")); //new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
-            _session = client.StartCodingSession(new CodingSubject { CaseNumber = "winforms testing case" },600);
+            _session = client.StartCodingSession(new CodingSubject { CaseNumber = "winforms testing case" }, timeoutMilliseconds: 600);
             //_session = client.ResumeCodingSession(new CodingSubject {CaseNumber = "winforms testing case"},(Guid) new GuidConverter().ConvertFromString("5537ade0-b91d-11e4-9f5c-0800200c9a66"));
             _source.AllowEdit = false;
             _source.AllowNew = false;

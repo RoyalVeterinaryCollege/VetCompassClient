@@ -7,6 +7,13 @@ This project is a client side API to facilitate consumption of the VetCompass cl
 If you are using a different technology on your client you will still be able to consume the web services via http calls using a 3rd library suitable for your platform.
 
 It is made available under the permissive [MIT licence](LICENSE)
+
+
+```c#
+ICodingSessionFactory client = new CodingSessionFactory(clientId, sharedSecret, new Uri("https://venomcoding.herokuapp.com/api/1.0/session/"));
+ICodingSession session = client.StartCodingSession(new CodingSubject { CaseNumber = "fluffy01",IsFemale = true,VeNomSpeciesCode = 1232}, timeoutMilliseconds:700);
+Task<VeNomQueryResponse> futureResults = session.QueryAsync(new VeNomQuery("hit by car"));
+```
 ## A brief note on the web services
 The VetCompass web services support the process of [clinical coding](http://en.wikipedia.org/wiki/Clinical_coder) in the context of veterinary clinics. The web services uses the veterinary-specific [VeNom codes](http://www.venomcoding.org/).  The API works as a web service which can be consumed by 3rd parties who want to enable clinical coding in their applications. Implementors wire up a text box in their system which takes a user’s search input as a string, and send the string to the web service.  The web service sends back an ranked list of codes which are most likely to be the codes that they are looking for.  The user chooses from the initial list, or amends their query to find a different list of codes to choose from.  
 
@@ -20,8 +27,9 @@ The API has only 3 methods:
 
 # How to use the VetCompass client library
 
-* Add a reference via nuget.  The package is called VetCompassClient
-* TODO 
+* Add a reference to the client library via nuget.  The package is called VetCompassClient
+* See 
+* You need to arrange a shared secret & clientId Guid with the VetCompass developers
 
 # A note on developing new versions of the VetCompass client library
 *This section is mainly for developers wishing to make changes/upgrades to the library*
