@@ -7,6 +7,8 @@ using VetCompass.Client;
 namespace WindowsFormsExample
 {
     //This is compiled against .net 3.5 but should compile without modication against .net 4.5 as well.  Simply build against 4.5 and reference VetCompassClient.net45 instead
+    //Resharper users!  If you are seeing VS errors to do with the System.Threading.Tasks namespace, like 'Cannot resolve symbol 'Tasks', this is a resharper problem caused by assembly merging: https://youtrack.jetbrains.com/issue/RSRP-192616
+    //The project should compile and run ok.
 
     public partial class Form1 : Form
     {

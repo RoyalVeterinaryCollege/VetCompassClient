@@ -5,8 +5,7 @@
       <Output TaskParameter="Include" ItemName="IlmergeAssemblies"/> 
     </CreateItem> 
     <Message Text="MERGING: @(IlmergeAssemblies->'%(Filename)')" Importance="High" /> 
-	<!--IlMerge on .net 4.0/4.5 requires an additional pointer to the framework version : for example: https://gist.github.com/maciakl/7018396 -->
-    <Exec Command="&quot;$(ProgramFiles)\Microsoft\Ilmerge\Ilmerge.exe&quot; /out:@(MainAssembly) &quot;@(IntermediateAssembly)&quot; @(IlmergeAssemblies->'&quot;%(FullPath)&quot; /internalize:&quot;..\ILMergeExclusions.txt&quot;', ' ')" /> 
+    <Exec Command="&quot;$(ProgramFiles)\Microsoft\Ilmerge\Ilmerge.exe&quot; /out:@(MainAssembly) &quot;@(IntermediateAssembly)&quot; @(IlmergeAssemblies->'&quot;%(FullPath)&quot; /internalize /targetplatform:v4,C:\Windows\Microsoft.NET\Framework\v4.0.30319', ' ')" /> 
   </Target> 
   <Target Name="_CopyFilesMarkedCopyLocal"/> 
 </Project>
