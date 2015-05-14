@@ -65,6 +65,7 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
+      <IlMerge>True</IlMerge>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -75,6 +76,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="CodingSession.cs" />
     <Compile Include="CodingSubject.cs" />
     <Compile Include="Constants.cs" />
@@ -82,7 +86,6 @@
     <Compile Include="RequestHelper.cs" />
     <Compile Include="RequestBackport.cs" />
     <Compile Include="TaskHelper.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CodingSessionFactory.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -90,6 +93,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
