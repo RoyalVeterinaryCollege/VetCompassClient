@@ -41,6 +41,12 @@ namespace VetCompass.Client
             //todo: get input from config
         }
 
+        /// <summary>
+        /// Instantiates the coding session factory.  This class is threadsafe and can be used as a singleton.
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="sharedSecret"></param>
+        /// <param name="vetcompassWebserviceBase"></param>
         public CodingSessionFactory(Guid clientId, string sharedSecret, Uri vetcompassWebserviceBase)
         {
             _clientId = clientId;
@@ -51,6 +57,12 @@ namespace VetCompass.Client
             _vetcompassWebserviceBase = expectedFormatForUri;
         }
 
+        /// <summary>
+        /// Starts a new coding session on the web service
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="timeoutMilliseconds"></param>
+        /// <returns></returns>
         public ICodingSession StartCodingSession(CodingSubject subject, int? timeoutMilliseconds = null)
         {
             var session = new CodingSession(_clientId, _sharedSecret, subject, _vetcompassWebserviceBase)
@@ -61,6 +73,13 @@ namespace VetCompass.Client
             return session;
         }
 
+        /// <summary>
+        /// Resumes a pre-started coding session.  This assumes the session been started with a previous call to Start and that the same sessionId is used to resume.
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="sessionId"></param>
+        /// <param name="timeoutMilliseconds"></param>
+        /// <returns></returns>
         public ICodingSession ResumeCodingSession(CodingSubject subject, Guid sessionId, int? timeoutMilliseconds = null)
         {
             var session = new CodingSession(_clientId, _sharedSecret, subject, _vetcompassWebserviceBase)
@@ -79,14 +98,24 @@ namespace VetCompass.Client
     {
         private string _searchExpression;
 
+        /// <summary>
+        /// Don't use this constructor
+        /// </summary>
         [Obsolete("For serialisor only")]
         public VeNomQuery(){ }
 
+        /// <summary>
+        /// Instantiates a new VeNomQuery
+        /// </summary>
+        /// <param name="searchExpression"></param>
         public VeNomQuery(string searchExpression)
         {
             SearchExpression = searchExpression;
         }
 
+        /// <summary>
+        /// Gets or sets the Search Expression
+        /// </summary>
         public string SearchExpression
         {
             get { return _searchExpression; }
@@ -138,7 +167,15 @@ namespace VetCompass.Client
     {
         //todo:rename to VeNomId?
         public int DataDictionaryId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the code
+        /// </summary>
         public string Name { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the subset to which the code belongs
+        /// </summary>
         public string Subset { get; set; }
     }
 
@@ -147,6 +184,11 @@ namespace VetCompass.Client
     /// </summary>
     public class VetCompassCodeSelection
     {
+        /// <summary>
+        /// Instantiates a VetCompassCodeSelection
+        /// </summary>
+        /// <param name="searchExpression"></param>
+        /// <param name="veNomId"></param>
         public VetCompassCodeSelection(string searchExpression, int veNomId)
         {
             

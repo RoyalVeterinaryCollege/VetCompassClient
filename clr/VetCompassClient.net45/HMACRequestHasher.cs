@@ -38,6 +38,7 @@ namespace VetCompass.Client
         /// <param name="request"></param>
         /// <param name="clientId"></param>
         /// <param name="sharedSecret"></param>
+        /// <param name="requestBody"></param>
         public void HashRequest(WebRequest request, Guid clientId, string sharedSecret, string requestBody)
         {
             var sharedSecretKeyAsByteArray = ConvertToByteArray(sharedSecret);

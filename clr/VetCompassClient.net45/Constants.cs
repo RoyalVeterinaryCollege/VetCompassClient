@@ -5,6 +5,9 @@ using System.Text;
 
 namespace VetCompass.Client
 {
+    /// <summary>
+    /// Some constant literals for communicating with the web services
+    /// </summary>
     public static class Constants
     {
         /// <summary>

@@ -52,6 +52,11 @@ namespace VetCompass.Client
         /// </summary>
         public string PartialPostCode { get; set; }
 
+        /// <summary>
+        /// A method for determining equivalence between two coding subjects
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
         public bool Equals(CodingSubject other)
         {
             return CaseNumber == other.CaseNumber && VeNomBreedCode == other.VeNomBreedCode &&

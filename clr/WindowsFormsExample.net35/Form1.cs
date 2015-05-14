@@ -27,6 +27,7 @@ namespace WindowsFormsExample
             _source.AllowNew = false;
             lstBox.DisplayMember = "Name";
             lstBox.DataSource = _source;
+            
         }
 
         private void txtQuery_KeyUp(object sender, KeyEventArgs e)

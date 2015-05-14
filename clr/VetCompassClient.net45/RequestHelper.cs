@@ -8,6 +8,9 @@ using Newtonsoft.Json;
 
 namespace VetCompass.Client
 {
+    /// <summary>
+    /// Functionality for helping with the web calls
+    /// </summary>
     public static class RequestHelper
     {
         /// <summary>
@@ -27,6 +30,11 @@ namespace VetCompass.Client
             return request;
         }
 
+        /// <summary>
+        /// Sets the vetcompass client header
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="clientId"></param>
         public static void SetClientHeader(HttpWebRequest request, Guid clientId)
         {
             request.Headers.Add(Constants.VetCompass_clientid_Header, clientId.ToString());
@@ -44,6 +52,14 @@ namespace VetCompass.Client
             request.Headers.Add(Constants.VetCompass_Date_Header, date);
         }
 
+        /// <summary>
+        /// Prepares a webrequest for making a post to the web service
+        /// </summary>
+        /// <param name="request"></param>
+        /// <param name="body"></param>
+        /// <param name="clientId"></param>
+        /// <param name="sharedSecret"></param>
+        /// <returns></returns>
         public static byte[] PreparePostRequest(WebRequest request, object body, Guid clientId, string sharedSecret)
         {
             request.ContentType = "application/json";
@@ -81,6 +97,8 @@ namespace VetCompass.Client
         /// <summary>
         /// Writes the request to the upload stream
         /// </summary>
+        /// <param name="request"></param>
+        /// <param name="stream"></param>
         /// <param name="requestBytes"></param>
         /// <returns></returns>
         private static WebRequest HandleRequestPosting(WebRequest request, Stream stream, byte[] requestBytes)

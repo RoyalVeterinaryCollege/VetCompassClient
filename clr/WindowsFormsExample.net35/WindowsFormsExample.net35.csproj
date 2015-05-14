@@ -71,8 +71,8 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="VetCompassClient.net35, Version=0.5.0.18408, Culture=neutral, processorArchitecture=x86">
-      <HintPath>..\packages\VetCompassClient.0.5.0\lib\net35\VetCompassClient.net35.dll</HintPath>
+    <Reference Include="VetCompassClient.net35, Version=0.5.0.21717, Culture=neutral, processorArchitecture=x86">
+      <HintPath>..\packages\VetCompassClient.0.5.2\lib\net35\VetCompassClient.net35.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>

@@ -80,6 +80,7 @@ namespace VetCompass.Client
         /// <typeparam name="U"></typeparam>
         /// <param name="task"></param>
         /// <param name="f"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
         public static Task<U> FlatMapSuccess<U>(this Task task, Func<Task, Task<U>> f, CancellationToken ct)
         {
@@ -122,9 +123,10 @@ namespace VetCompass.Client
         }
 
         /// <summary>
-        ///     Flat maps a succesful Task to a new Task[U], else retains the original cancellation or fault
+        /// Flat maps a succesful Task to a new Task[U], else retains the original cancellation or fault
         /// </summary>
         /// <typeparam name="T"></typeparam>
+        /// <typeparam name="U"></typeparam>
         /// <param name="task"></param>
         /// <param name="f"></param>
         /// <returns></returns>
@@ -149,9 +151,11 @@ namespace VetCompass.Client
         ///     Flat maps a succesful Task to a new Task[U], else retains the original cancellation or fault.  This overload
         ///     permits cancellation.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="T">The type of the result of the original task</typeparam>
+        /// <typeparam name="U">The type of the result of the new task</typeparam>
         /// <param name="task"></param>
         /// <param name="f"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
         public static Task<U> FlatMapSuccess<T, U>(this Task<T> task, Func<T, Task<U>> f, CancellationToken ct)
         {
