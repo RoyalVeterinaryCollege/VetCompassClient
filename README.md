@@ -15,4 +15,12 @@ The build process ilmerges merges in some dependencies.  The JSON serialisor (Ne
 
 You need to install [IlMerge](http://www.microsoft.com/en-gb/download/details.aspx?id=17630) to compile the sln.
 
+## How to publish the nuget package 
+
+* There is a nuget nuspec at clr/. Check the version & any new dependencies etc
+* Set sln to Release
+* Compile (this produces the dlls in the place that the nuspec expects)
+* Create the .nupkg file. I used [the nuget gui](https://docs.nuget.org/create/using-a-gui-to-build-packages#nuget-package-explorer---gui-tool-for-building-packages)
+* Publish to nuget (File..Publish)
+
 TODO : how to install via Nuget 
