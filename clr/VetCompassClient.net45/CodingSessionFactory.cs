@@ -39,7 +39,7 @@ namespace VetCompass.Client
         /// Instantiates the coding session factory.  This class is threadsafe and can be used as a singleton.
         /// </summary>
         /// <param name="clientId"></param>
-        /// <param name="sharedSecret"></param>
+        /// <param name="sharedSecret">base64 encoded shared secret for request authentication</param>
         /// <param name="vetcompassWebserviceBase"></param>
         public CodingSessionFactory(Guid clientId, string sharedSecret, Uri vetcompassWebserviceBase)
         {

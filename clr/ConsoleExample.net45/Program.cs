@@ -13,7 +13,10 @@ namespace ConsoleExample
     {
         static void Main(string[] args)
         {
-            SelectionTesting();
+            var client = new CodingSessionFactory(Guid.NewGuid(), "TI4hiVg2bTTR7+d/mqFo/7gMUiVZGOsC0JSMSVUI99VQO8cT+ImSfnPqPBPru1zdb12GbXB7C4W4Y300SUeR+w==", new Uri("https://vetcompass.herokuapp.com/api/1.0/session/"));
+            var session = client.StartCodingSession(new CodingSubject { CaseNumber = "noel's testing case" });
+            var results = session.QuerySynch(new VeNomQuery("rta"));
+            Console.ReadKey();
         }
 
         private static void SelectionTesting()
@@ -46,20 +49,8 @@ namespace ConsoleExample
 
         public static string CreateServiceClientKey()
         {
-            SymmetricAlgorithm symAlg = SymmetricAlgorithm.Create("Rijndael");
-
-            symAlg.KeySize = 128;
-
-            byte[] key = symAlg.Key;
-
-            StringBuilder sb = new StringBuilder(key.Length * 2);
-
-            foreach (byte b in key)
-            {
-                sb.AppendFormat("{0:x2}", b);
-            }
-
-            return sb.ToString();
+            var hmac = new HMACSHA256();
+            return Convert.ToBase64String(hmac.Key);
         }
     }
 }

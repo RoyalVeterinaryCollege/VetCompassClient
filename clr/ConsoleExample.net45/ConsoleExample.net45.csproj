@@ -68,8 +68,8 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="VetCompassClient.net45, Version=0.5.0.18412, Culture=neutral, processorArchitecture=x86">
-      <HintPath>..\packages\VetCompassClient.0.5.0\lib\net45\VetCompassClient.net45.dll</HintPath>
+    <Reference Include="VetCompassClient.net45, Version=0.5.0.21715, Culture=neutral, processorArchitecture=x86">
+      <HintPath>..\packages\VetCompassClient.0.5.3\lib\net45\VetCompassClient.net45.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>

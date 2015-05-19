@@ -37,7 +37,7 @@ namespace VetCompass.Client
         /// </summary>
         /// <param name="request"></param>
         /// <param name="clientId"></param>
-        /// <param name="sharedSecret"></param>
+        /// <param name="sharedSecret">base64 string</param>
         /// <param name="requestBody"></param>
         public void HashRequest(WebRequest request, Guid clientId, string sharedSecret, string requestBody)
         {
@@ -54,9 +54,7 @@ namespace VetCompass.Client
 
         private byte[] ConvertToByteArray(string sharedSecret)
         {
-            var bytes = Encoding.UTF8.GetBytes(sharedSecret);
-            var base64EncodedSharedSecretKey = Convert.ToBase64String(bytes);
-            var sharedSecretKeyAsByteArray = Convert.FromBase64String(base64EncodedSharedSecretKey);
+            var sharedSecretKeyAsByteArray = Convert.FromBase64String(sharedSecret);
             return sharedSecretKeyAsByteArray;
         }
     }

@@ -75,9 +75,12 @@
     <Reference Include="System.Web" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\SharedAssemblyInfo.cs">
-      <Link>SharedAssemblyInfo.cs</Link>
-    </Compile>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="..\VetCompassClient.net45\CodingSession.cs">
       <Link>CodingSession.cs</Link>
     </Compile>
@@ -102,12 +105,18 @@
     <Compile Include="..\VetCompassClient.net45\TaskHelper.cs">
       <Link>TaskHelper.cs</Link>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Properties\" />
+    <Compile Include="..\VetCompassClient.net45\VeNomQuery.cs">
+      <Link>VeNomQuery.cs</Link>
+    </Compile>
+    <Compile Include="..\VetCompassClient.net45\VeNomQueryResponse.cs">
+      <Link>VeNomQueryResponse.cs</Link>
+    </Compile>
+    <Compile Include="..\VetCompassClient.net45\VetCompassCode.cs">
+      <Link>VetCompassCode.cs</Link>
+    </Compile>
+    <Compile Include="..\VetCompassClient.net45\VetCompassCodeSelection.cs">
+      <Link>VetCompassCodeSelection.cs</Link>
+    </Compile>
   </ItemGroup>
   <!--<Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />-->
   <Import Project="..\Ilmerge.CSharp.targets" />
