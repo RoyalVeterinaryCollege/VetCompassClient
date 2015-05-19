@@ -24,7 +24,7 @@ namespace ConsoleExample
             var client = new CodingSessionFactory(Guid.NewGuid(), "not very secret", new Uri("http://192.168.1.199:5000/api/1.0/session/"));
             var session = client.StartCodingSession(new CodingSubject { CaseNumber = "noel's testing case" });
             var results = session.QuerySynch(new VeNomQuery("rta"));
-            var post = session.RegisterSelection(new VetCompassCodeSelection("rta",results.Results.First().DataDictionaryId));
+            var post = session.RegisterSelection(new VetCompassCodeSelection("rta",results.Results.First().VeNomId));
 
             Console.ReadKey();
         }
