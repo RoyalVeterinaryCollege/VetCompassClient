@@ -13,7 +13,10 @@ namespace ConsoleExample
     {
         static void Main(string[] args)
         {
-            var client = new CodingSessionFactory(Guid.NewGuid(), "TI4hiVg2bTTR7+d/mqFo/7gMUiVZGOsC0JSMSVUI99VQO8cT+ImSfnPqPBPru1zdb12GbXB7C4W4Y300SUeR+w==", new Uri("https://vetcompass.herokuapp.com/api/1.0/session/"));
+            //var key = CreateServiceClientKey();
+            //var id = Guid.NewGuid();
+
+            var client = new CodingSessionFactory(Guid.Parse("6219abd9-b229-458c-baa0-2fc80763193e"), "ai5VdBnKx8GD1HT7fo6WTkHTKqGsBbhfcXX0cOHnuj93mjDrtKbgDjbqLNDfZoJeRVRD3pIspg3Scydm2Gx3CQ==", new Uri("https://vetcompass.herokuapp.com/api/1.0/session/"));
             var session = client.StartCodingSession(new CodingSubject { CaseNumber = "noel's testing case" });
             var results = session.QuerySynch(new VeNomQuery("rta"));
             Console.ReadKey();
