@@ -1,16 +1,18 @@
-# Open source VetCompass web services client library
+# VetCompass web services client library
 This project is a client side API to facilitate consumption of the VetCompass clinical coding web services.  We currently provide a client library for :
 
 * .net 4.5
 * .net 3.5
 
-If you are using a different technology on your client you will still be able to consume the web services via http calls using a 3rd library suitable for your platform.
+If you are using a different technology you will still be able to consume the web services.  They are exposed via HTTP so you can simply use any library which can make HTTP calls.
 
-It is made available under the permissive [MIT licence](LICENSE)
+This client library is made available under the permissive [MIT licence](LICENSE)
 ## A brief note on the web services
-The VetCompass web services support the process of [clinical coding](http://en.wikipedia.org/wiki/Clinical_coder) in the context of veterinary clinics. The web services uses the veterinary-specific [VeNom codes](http://www.venomcoding.org/).  The API works as a web service which can be consumed by 3rd parties who want to enable clinical coding in their applications. Implementors wire up a text box in their system which takes a user’s search input as a string, and send the string to the web service.  The web service sends back an ranked list of codes which are most likely to be the codes that they are looking for.  The user chooses from the initial list, or amends their query to find a different list of codes to choose from.  
+The VetCompass web services support the process of [clinical coding](http://en.wikipedia.org/wiki/Clinical_coder) in the context of veterinary clinics. The web services make it easier for clinicians to find clinical codes because it has learned how vets refer to diseases.  Veterinary clinical concepts are described by different phrases which mean the same thing.  Also, vets use acronyms and frequently miss-type words. The web service knows how to map these references to their underlying meaning in the codes.  
 
-The service runs as a set of RESTful web services with JSON as the format of the messages.  Any client technology that can use an HTTP stack can consume the web service (for instance winforms, WPF, client-side javascript, pretty much any technology stack).  
+The web services uses the veterinary-specific [VeNom coding set](http://www.venomcoding.org/).  The web services are consumed by 3rd parties who want to enable clinical coding in their applications. Implementors take a user’s search input as a string, and send the string to the web service.  The web service sends back a list of codes which are most likely to be the codes that they are looking for.  The user chooses from this list, or amends their query to find a new list of codes to choose from.  The web service is fast; it is designed to be queried on each key-press.
+
+The service runs in a RESTful manner with JSON as the format of the messages.  Any client technology that can use an HTTP stack can consume the web service (for instance winforms, client-side javascript, PHP, Java ... pretty much every technology stack).  
 
 The API has only 3 methods:
 
@@ -25,14 +27,15 @@ ICodingSessionFactory client = new CodingSessionFactory(clientId, sharedSecret, 
 ICodingSession session = client.StartCodingSession(new CodingSubject { CaseNumber = "fluffy01",IsFemale = true,VeNomSpeciesCode = 1232}, timeoutMilliseconds:700);
 Task<VeNomQueryResponse> futureResults = session.QueryAsync(new VeNomQuery("hit by car"));
 ```
-* You need to arrange a shared secret & clientId Guid with the VetCompass developers
-* Contact RVC to generate these details.  This is necessary in order to authenticate your client (which is done via [HMAC](http://www.thebuzzmedia.com/designing-a-secure-rest-api-without-oauth-authentication) )
+
 * Add a reference to the client library via nuget.  The package is called VetCompassClient
-* When your end-user has selected a code, remember to call RegisterSelection. The web service relies on these calls to learn the terms that your users use
 * The asynchronous call returns a Task&lt;VeNomQueryResponse&gt;
     * The task will fault on error and this means the CodingSession should be abandoned
     * If the task is cancelled, then a timeout occurred.  You can adjust the timeout via the Timeout property on the CodingSession
     * If your Start call timed out, you will need to create a new CodingSession
+* When your end-user has selected a code, remember to call RegisterSelection. The web service relies on these calls to learn the terms that your users use
+* In order to authenticate with the web services you will need to arrange a shared secret & clientId Guid with the VetCompass developers
+* Contact RVC to generate these details.  This is necessary in order to authenticate your client (which is done via [HMAC](http://www.thebuzzmedia.com/designing-a-secure-rest-api-without-oauth-authentication) )
 * Prefer the asynchronous method in winforms/WPF application which will keep your UI responsive  
 * There is an example winforms project which shows how to synchronise back to the UI thread
 
