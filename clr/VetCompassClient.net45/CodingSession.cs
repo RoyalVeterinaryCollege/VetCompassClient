@@ -124,10 +124,25 @@ namespace VetCompass.Client
         {
             var cancellationTokenSource = new CancellationTokenSource();
             var task = _sessionCreationTask.FlatMapSuccess(_ => Query(query), cancellationTokenSource.Token);
+            return HonourTimeout(task, cancellationTokenSource);
+        }
 
+        /// <summary>
+        ///     Implements a timeout on requests (if one was required)
+        /// </summary>
+        /// <param name="task"></param>
+        /// <param name="cancellationTokenSource"></param>
+        /// <returns>A Task which will cancel after the requested timeout period</returns>
+        private Task<T> HonourTimeout<T>(Task<T> task, CancellationTokenSource cancellationTokenSource)
+        {
+            //set timeout if nec
             if (Timeout.HasValue)
+            {
+#if NET45
+                cancellationTokenSource.CancelAfter(Timeout.Value);
+#endif
                 return task.CancelAfter(cancellationTokenSource, Timeout.Value);
-
+            }
             return task;
         }
 
@@ -182,25 +197,7 @@ namespace VetCompass.Client
             return HonourTimeout(webTask, cancellationTokenSource).MapSuccess(response => (HttpWebResponse) response);
         }
 
-        /// <summary>
-        ///     Implements a timeout on requests (if one was required)
-        /// </summary>
-        /// <param name="webTask"></param>
-        /// <param name="cancellationTokenSource"></param>
-        /// <returns>A Task which will cancel after the requested timeout period</returns>
-        private Task<WebResponse> HonourTimeout(Task<WebResponse> webTask,
-            CancellationTokenSource cancellationTokenSource)
-        {
-            //set timeout if nec
-            if (Timeout.HasValue)
-            {
-#if NET45
-                cancellationTokenSource.CancelAfter(Timeout.Value);
-#endif
-                return webTask.CancelAfter(cancellationTokenSource, Timeout.Value);
-            }
-            return webTask;
-        }
+
 
         /// <summary>
         ///     Handles task failure by faulting the session

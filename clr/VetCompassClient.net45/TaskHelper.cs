@@ -284,8 +284,7 @@ namespace VetCompass.Client
         /// <param name="cancellationTokenSource"></param>
         /// <param name="timeMilliseconds"></param>
         /// <returns></returns>
-        public static Task<T> CancelAfter<T>(this Task<T> originalTask, CancellationTokenSource cancellationTokenSource,
-            int timeMilliseconds)
+        public static Task<T> CancelAfter<T>(this Task<T> originalTask, CancellationTokenSource cancellationTokenSource, int timeMilliseconds)
         {
             var delayTask = Delay(timeMilliseconds);
             delayTask.ContinueWith(_ =>
