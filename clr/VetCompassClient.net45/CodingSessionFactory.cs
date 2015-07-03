@@ -24,6 +24,23 @@ namespace VetCompass.Client
         /// <param name="timeoutMilliseconds"></param>
         /// <returns></returns>
         ICodingSession ResumeCodingSession(CodingSubject subject, Guid sessionId, int? timeoutMilliseconds = null);
+
+        /// <summary>
+        /// Starts a new coding session (without a patient context) which is registered on the web service
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="timeoutMilliseconds"></param>
+        /// <returns></returns>
+        ICodingSession StartCodingSession(int? timeoutMilliseconds = null);
+
+        /// <summary>
+        /// Resumes a pre-registered coding session (without a patient context).  This assumes a session with that sessionId has been started with a previous call
+        /// </summary>
+        /// <param name="subject"></param>
+        /// <param name="sessionId"></param>
+        /// <param name="timeoutMilliseconds"></param>
+        /// <returns></returns>
+        ICodingSession ResumeCodingSession(Guid sessionId, int? timeoutMilliseconds = null);
     }
 
     /// <summary>
@@ -82,6 +99,16 @@ namespace VetCompass.Client
             };
             session.Resume(sessionId);
             return session;
+        }
+
+        public ICodingSession StartCodingSession(int? timeoutMilliseconds = null)
+        {
+            return StartCodingSession(new CodingSubject(), timeoutMilliseconds);
+        }
+
+        public ICodingSession ResumeCodingSession(Guid sessionId, int? timeoutMilliseconds = null)
+        {
+            return ResumeCodingSession(new CodingSubject(), sessionId, timeoutMilliseconds);
         }
     }
 }
