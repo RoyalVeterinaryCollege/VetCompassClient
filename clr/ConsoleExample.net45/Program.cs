@@ -13,12 +13,16 @@ namespace ConsoleExample
     {
         static void Main(string[] args)
         {
-            //var key = CreateServiceClientKey();
-            //var id = Guid.NewGuid();
-
-            var client = new CodingSessionFactory(Guid.Parse("6219abd9-b229-458c-baa0-2fc80763193e"), "ai5VdBnKx8GD1HT7fo6WTkHTKqGsBbhfcXX0cOHnuj93mjDrtKbgDjbqLNDfZoJeRVRD3pIspg3Scydm2Gx3CQ==", new Uri("https://vetcompass.herokuapp.com/api/1.0/session/"));
+            var publicClientId = Guid.Parse("6219abd9-b229-458c-baa0-2fc80763193e");
+            var publicSharedSecret = "ai5VdBnKx8GD1HT7fo6WTkHTKqGsBbhfcXX0cOHnuj93mjDrtKbgDjbqLNDfZoJeRVRD3pIspg3Scydm2Gx3CQ==";
+            var client = new CodingSessionFactory(publicClientId, publicSharedSecret, new Uri("https://vetcompass.herokuapp.com/api/1.0/session/"));
             var session = client.StartCodingSession(new CodingSubject { CaseNumber = "noel's testing case" });
-            var results = session.QuerySynch(new VeNomQuery("rta"));
+            
+            var veNomQuery = new VeNomQuery("rta"); //user's string query
+            veNomQuery.FilterSubset.Add(Subsets.Diagnosis);  //how to restrict to diagnoses only
+            veNomQuery.Skip = 5; //how to skip first n hits (paging)
+            veNomQuery.Take = 20; //how to take m hits (default 10)
+            var results = session.QuerySynch(veNomQuery); //call service (synchronously)
             Console.ReadKey();
         }
 
