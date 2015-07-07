@@ -14,7 +14,10 @@ namespace VetCompass.Client
         /// Don't use this constructor
         /// </summary>
         [Obsolete("For serialisor only")]
-        public VeNomQuery(){ }
+        public VeNomQuery()
+        {
+            FilterSubset = new HashSet<int>();
+        }
 
         /// <summary>
         /// Instantiates a new VeNomQuery
@@ -23,6 +26,7 @@ namespace VetCompass.Client
         public VeNomQuery(string searchExpression)
         {
             SearchExpression = searchExpression;
+            FilterSubset = new HashSet<int>();
         }
 
         /// <summary>
@@ -51,7 +55,7 @@ namespace VetCompass.Client
         public int? Take { get; set; } //defaults to 10 on server
 
         /// <summary>
-        ///     The subsets to filter the results by
+        ///     The subsets to filter the results. Use <see cref="VetCompass.Client.Subsets"/> as a source for the values of the HashSet object
         /// </summary>
         public HashSet<int> FilterSubset { get; set; } //defaults to all except 'Modelling'
     }

@@ -85,6 +85,7 @@
     <Compile Include="HMACRequestHasher.cs" />
     <Compile Include="RequestHelper.cs" />
     <Compile Include="RequestBackport.cs" />
+    <Compile Include="Subsets.cs" />
     <Compile Include="TaskHelper.cs" />
     <Compile Include="CodingSessionFactory.cs" />
     <Compile Include="VeNomQuery.cs" />

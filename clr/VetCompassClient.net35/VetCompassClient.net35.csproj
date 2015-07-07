@@ -102,6 +102,9 @@
     <Compile Include="..\VetCompassClient.net45\RequestHelper.cs">
       <Link>RequestHelper.cs</Link>
     </Compile>
+    <Compile Include="..\VetCompassClient.net45\Subsets.cs">
+      <Link>Subsets.cs</Link>
+    </Compile>
     <Compile Include="..\VetCompassClient.net45\TaskHelper.cs">
       <Link>TaskHelper.cs</Link>
     </Compile>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -245,12 +246,37 @@ namespace VetCompass.Client
         /// <returns></returns>
         private Task<VeNomQueryResponse> Query(VeNomQuery query)
         {
-            var encoded = HttpUtility.UrlEncode(query.SearchExpression);
-            var request = CreateRequest(new Uri(_sessionAddress + "search/" + encoded));
+            var searchBase = MakeUriForSearching(query);
+
+            var request = CreateRequest(searchBase);
             request.Method = WebRequestMethods.Http.Get;
             request.Accept = "application/json";
             var task = request.GetResponseAsync();
             return task.MapSuccess(DeserialiseQueryReponse);
+        }
+
+        private Uri MakeUriForSearching(VeNomQuery query)
+        {
+            var encoded = HttpUtility.UrlEncode(query.SearchExpression);
+            var searchBase = _sessionAddress + "search/" + encoded;
+
+            var queryStringParameters = new Dictionary<string, string>();
+
+            if (query.FilterSubset.Count > 0)  //server expects this format subset=[1,9,3]
+                queryStringParameters["subset"] = query.FilterSubset.Aggregate("[", (acc, id) => String.Format("{0}{1},",acc, id)).TrimEnd(',') + "]";
+
+            if (query.Skip.HasValue)
+                queryStringParameters["skip"] = query.Skip.Value.ToString();
+
+            if (query.Take.HasValue)
+                queryStringParameters["take"] = query.Take.Value.ToString();
+
+            if (!queryStringParameters.Any())
+                return new Uri(searchBase);
+
+            var queryString = queryStringParameters.Aggregate("?", (acc, kv) => String.Format("{0}{1}={2}&",acc, kv.Key, kv.Value)).TrimEnd('&');
+
+            return new Uri(searchBase + queryString);
         }
 
         /// <summary>
