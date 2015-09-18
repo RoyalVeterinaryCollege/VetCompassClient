@@ -99,6 +99,7 @@ namespace VetCompass.Client
             //Asynchronously post the request
             var webTask = RequestHelper.PostAsynchronously(request, ct, requestBytes, HandleSessionCreationFailure);
             _sessionCreationTask = HonourTimeout(webTask, cancellationTokenSource);
+            _sessionCreationTask.ContinueWith(FaultSessionOnTimeOut); //the session needs to be faulted on a timeout
             IsStarted = true;
         }
 
@@ -145,6 +146,20 @@ namespace VetCompass.Client
                 return task.CancelAfter(cancellationTokenSource, Timeout.Value);
             }
             return task;
+        }
+
+        /// <summary>
+        /// If the session creation task times out, then the session is unusable
+        /// </summary>
+        /// <param name="connectionTask"></param>
+        private void FaultSessionOnTimeOut(Task connectionTask)
+        {
+          
+            if (connectionTask.IsCanceled)
+            {
+                var exception = new AggregateException(new TimeoutException("Timeout contacting the webservice"));
+                HandleSessionCreationFailure(exception);
+            }
         }
 
         /// <summary>
@@ -197,8 +212,6 @@ namespace VetCompass.Client
             var webTask = RequestHelper.PostAsynchronously(request, ct, requestBytes, HandleSessionCreationFailure);
             return HonourTimeout(webTask, cancellationTokenSource).MapSuccess(response => (HttpWebResponse) response);
         }
-
-
 
         /// <summary>
         ///     Handles task failure by faulting the session
