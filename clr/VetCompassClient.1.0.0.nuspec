@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>VetCompassClient</id>
-        <version>0.5.9</version>
+        <version>1.0.0</version>
         <title>VetCompass web services client library</title>
         <authors>nkennedy</authors>
         <owners>Royal Veterinary College</owners>
