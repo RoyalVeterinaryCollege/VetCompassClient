@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+    <metadata>
+        <id>VetCompassClient</id>
+        <version>0.5.9</version>
+        <title>VetCompass web services client library</title>
+        <authors>nkennedy</authors>
+        <owners>Royal Veterinary College</owners>
+        <licenseUrl>https://github.com/RoyalVeterinaryCollege/VetCompassClient/blob/master/LICENSE</licenseUrl>
+        <projectUrl>https://github.com/RoyalVeterinaryCollege/VetCompassClient</projectUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>A client library to facilitate calling VetCompass web services for veterinary clinical coding</description>
+        <copyright>Royal Veterinary College</copyright>
+    </metadata>
+    <files>
+        <file src="lib\net35\VetCompassClient.net35.dll" target="lib\net35\VetCompassClient.net35.dll" />
+        <file src="lib\net45\VetCompassClient.net45.dll" target="lib\net45\VetCompassClient.net45.dll" />
+    </files>
+</package>
