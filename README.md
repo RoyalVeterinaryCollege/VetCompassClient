@@ -58,14 +58,54 @@ BODY :
 ### Execute a query
 
 ```
-GET https://vetcompass.herokuapp.com/api/1.0/session/{Session UUID}/search/{URL escaped query}
+GET https://vetcompass.herokuapp.com/api/1.0/session/{Session UUID}/search/{URL escaped query}?skip=10&take=10
 ```
 
 {URL escaped query} is the string that your user typed into a text box in your application.  The string must be [URL encoded](http://www.w3schools.com/tags/ref_urlencode.asp).
 
+The API will return the most likely VeNom codes for your users' query as a 
+JSON object:
+
+```json
+{
+    "query": {
+        "searchExpression": "dm",
+        "skip": 0,
+        "take": 10,
+        "filterSubset": [5, 10, 14, 1, 6, 9, 2, 17, 7, 3, 18, 16, 11, 4, 15]
+    },
+    "results": [{
+        "venomId": 658,
+        "name": "Diabetes mellitus",
+        "loglikelihood": -0.02047852879801195,
+        "subset": "Diagnosis"
+    }, {
+        "venomId": 662,
+        "name": "Diabetes mellitus - unstable",
+        "loglikelihood": -4.997212396798012,
+        "subset": "Diagnosis"
+    }, {
+        "venomId": 81,
+        "name": "Polyuria/polydipsia",
+        "loglikelihood": -4.997212396798012,
+        "subset": "Presenting complaint"
+    }, {
+        "venomId": 963,
+        "name": "Hepatitis",
+        "loglikelihood": -4.997212396798012,
+        "subset": "Diagnosis"
+    }],
+    "total": 4
+}
+``` 
+Please don't rely on the loglikelihood field being present in future versions.  The current model is probablistic but the next one is unlikely to output a probability.  The results will always be returned in the order you should show them to your user, so don't re-sort them client-side.
+
+The optional query string supports paging of results via skip/take.  The paging defaults are shown (top 10 hits).  The querystring also supports filtering VeNom codes to specific [subsets](https://github.com/RoyalVeterinaryCollege/VetCompassClient/blob/master/clr/VetCompassClient.net45/Subsets.cs).  For example, `?subset=[14,7]`.  The default subsets are all except 'Modelling'.  If you want to use the VeNom modelling hierarchy please contact us for advice.
+
+### Register a clinical code selection
 
 
-# How to use the VetCompass client library
+# How to use the .Net VetCompass client library
 It's easy to use:
 ```csharp
 ICodingSessionFactory client = new CodingSessionFactory(clientId, sharedSecret, new Uri("https://vetcompass.herokuapp.com/api/1.0/session/"));
