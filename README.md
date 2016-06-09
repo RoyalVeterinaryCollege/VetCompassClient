@@ -46,7 +46,7 @@ BODY :
 	"CaseNumber":"498796",
 	"VeNomBreedCode":null,
 	"BreedName":"Doberman",
-	"VeNomSpeciesCode"15461,
+	"VeNomSpeciesCode":15461,
 	"SpeciesName":"Canine",
 	"IsFemale":false,
 	"IsNeutered":false,
@@ -97,7 +97,7 @@ JSON object under `results`, and it will summarise your query under `query`
     "total": 4
 }
 ``` 
-Please don't rely on the loglikelihood field being present in future versions.  The current model is probablistic but the next one is unlikely to output a probability.  The results will always be returned in the order you should show them to your user, so don't re-sort them client-side.
+Please don't rely on the loglikelihood field being present in future versions (it's included for debug purposes).  The current model is probablistic but the next model might not output a probability.  The results will always be returned in the order you should show them to your user, so don't re-sort them client-side.
 
 The optional query string supports paging of results via skip/take.  The paging defaults are shown (top 10 hits).  The querystring also supports filtering VeNom codes to specific [subsets](https://github.com/RoyalVeterinaryCollege/VetCompassClient/blob/master/clr/VetCompassClient.net45/Subsets.cs).  For example, `?subset=[14,7]`.  The default subsets are all except 'Modelling'.  If you want to use the VeNom modelling hierarchy please contact us for advice.
 
