@@ -64,8 +64,7 @@ GET https://vetcompass.herokuapp.com/api/1.0/session/{Session UUID}/search/{URL 
 {URL escaped query} is the string that your user typed into a text box in your application.  The string must be [URL encoded](http://www.w3schools.com/tags/ref_urlencode.asp).
 
 The API will return the most likely VeNom codes for your users' query as a 
-JSON object:
-
+JSON object under `results`, and it will summarise your query under `query`
 ```json
 {
     "query": {
@@ -104,6 +103,20 @@ The optional query string supports paging of results via skip/take.  The paging 
 
 ### Register a clinical code selection
 
+```
+POST https://vetcompass.herokuapp.com/api/1.0/session/{Session UUID}/selection
+```
+
+This call registers a selection of a code by your user.  We need this call to improve the ranking algorithm which returns query results.  The body is a JSON object containing the what was in the search text box when they selected a code, ie their final query.  Also, the VeNomID of the code they selected:
+
+```json
+{
+	"searchExpression" : "dm",
+	"venomId" : 12345
+}
+```
+
+Please only call this method a maximum of once per session.  If your user starts another query after selecting a code, please start a new session rather than re-using the existing one.
 
 # How to use the .Net VetCompass client library
 It's easy to use:
