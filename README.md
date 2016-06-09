@@ -4,21 +4,66 @@ This project is a client side API to facilitate consumption of the VetCompass cl
 * .net 4.5
 * .net 3.5
 
-If you are using a different technology you will still be able to consume the web services.  They are exposed via HTTP so you can simply use any library which can make HTTP calls.
+If you are using a different technology you will still be able to consume the web services.  They are exposed via HTTP so you can simply use any library which can make HTTP calls.  This page contains documentation on the underlying protocol for the web services which is relevent for all clients.
 
 This client library is made available under the permissive [MIT licence](LICENSE)
 ## A brief note on the web services
-The VetCompass web services support the process of [clinical coding](http://en.wikipedia.org/wiki/Clinical_coder) in the context of veterinary clinics. The web services make it easier for clinicians to find clinical codes because it has learned how vets refer to diseases.  Veterinary clinical concepts are described by different phrases which mean the same thing.  Also, vets use acronyms and frequently miss-type words. The web service knows how to map these references to their underlying meaning in the codes.  
+The VetCompass web services support the process of [clinical coding](http://en.wikipedia.org/wiki/Clinical_coder) in the context of veterinary clinics. The web services make it easier for clinicians to find clinical codes because it has learned how vets refer to diseases.  Veterinary clinical concepts are described by different phrases which mean the same thing.  Also, vets use acronyms and frequently miss-type words. The web service knows how to map these references to their underlying meaning in the codes.  88% of queries result in a code being selection.  A typical search duration is 3 seconds.
+
 
 The web services uses the veterinary-specific [VeNom coding set](http://www.venomcoding.org/).  The web services are consumed by 3rd parties who want to enable clinical coding in their applications. Implementors take a user’s search input as a string, and send the string to the web service.  The web service sends back a list of codes which are most likely to be the codes that they are looking for.  The user chooses from this list, or amends their query to find a new list of codes to choose from.  The web service is fast; it is designed to be queried on each key-press.
 
 The service runs in a RESTful manner with JSON as the format of the messages.  Any client technology that can use an HTTP stack can consume the web service (for instance winforms, client-side javascript, PHP, Java ... pretty much every technology stack).  
+
+## Webservices documentation
+This section is aimed at non .Net users. There is a .Net client library (see below)
 
 The API has only 3 methods:
 
 * Create a query session
 * Execute a query
 * Register a clinical code selection
+
+### Create a session
+```
+POST https://vetcompass.herokuapp.com/api/1.0/session/{Session UUID}
+```
+{Session UUID} is a client generated [unique identifier](https://en.wikipedia.org/wiki/Universally_unique_identifier) (AKA guid) for your session.  
+
+The session UUID groups API calls into a session or unit of work.  A session scope begins when the user starts to query for VeNom codes in your app.  A session scope ends when a user selects a code in your application and you call to register that code selection.  If the user abandons the session in your application, the session is ended implicitly with no such call.  If the user wants to code multiple codes, create multiple sessions. Sessions are cheap and fast, and a typical session lasts 3 seconds with a user selecting a Venom code.
+
+
+The body of the request is a JSON object describing the signalment of the patient which is being coded.  This signalment is needed to better predict codes based on species, age, etc.  The CaseNumber is needed for your possible future usage. If the application context of the coding session is not a particular patient (ie looking up a breed name for a query), simply leave the signalment values blank (they are all optional).
+
+Example usage:
+
+```
+POST https://vetcompass.herokuapp.com/api/1.0/session/7e79ada4-c2ff-4e77-a1c0-f6bb3f96a005
+```
+```json
+BODY :
+{
+	"CaseNumber":"498796",
+	"VeNomBreedCode":null,
+	"BreedName":"Doberman",
+	"VeNomSpeciesCode"15461,
+	"SpeciesName":"Canine",
+	"IsFemale":false,
+	"IsNeutered":false,
+	"ApproximateDateOfBirth":"2013-01-05T00:00:00",
+	"PartialPostCode":"AB12 3"
+}
+```
+
+### Execute a query
+
+```
+GET https://vetcompass.herokuapp.com/api/1.0/session/{Session UUID}/search/{URL escaped query}
+```
+
+{URL escaped query} is the string that your user typed into a text box in your application.  The string must be [URL encoded](http://www.w3schools.com/tags/ref_urlencode.asp).
+
+
 
 # How to use the VetCompass client library
 It's easy to use:
@@ -35,7 +80,7 @@ Task<VeNomQueryResponse> futureResults = session.QueryAsync(new VeNomQuery("hit 
     * If your Start call timed out, you will need to create a new CodingSession
 * When your end-user has selected a code, remember to call RegisterSelection. The web service relies on these calls to learn the terms that your users use
 * In order to authenticate with the web services you will need to arrange a shared secret & clientId Guid with the VetCompass developers
-* Contact RVC to generate these details.  This is necessary in order to authenticate your client (which is done via [HMAC](http://www.thebuzzmedia.com/designing-a-secure-rest-api-without-oauth-authentication) )
+* Contact RVC to generate these details.  This is necessary in order to authenticate your client (which is done via [HMAC](http://www.thebuzzmedia.com/designing-a-secure-rest-api-without-oauth-authentication) )  It is possible to use the webservice without authenticating, but future functionality will only be available to authenticated users.
 * Prefer the asynchronous method in winforms/WPF application which will keep your UI responsive  
 * There is an example winforms project which shows how to synchronise back to the UI thread
 
