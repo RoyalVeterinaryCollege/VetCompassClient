@@ -19,5 +19,10 @@
         /// Gets or sets the name of the subset to which the code belongs
         /// </summary>
         public string Subset { get; set; }
+
+        /// <summary>
+        /// Gets or sets the id of the subset to which the code belongs
+        /// </summary>
+        public int SubsetId { get; set; }
     }
 }
