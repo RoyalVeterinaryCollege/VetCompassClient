@@ -25,10 +25,11 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\lib\net35\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>..\lib\net35\VetCompassClient.net35.XML</DocumentationFile>
   </PropertyGroup>
   <!--The next two PropertyGroups define compile constants for building against 4.5 and 3.5 of the framework.  See AfterBuild task for the building of both -->
   <PropertyGroup Condition="  '$(TargetFrameworkVersion)' == 'v4.5' ">
@@ -81,6 +82,9 @@
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="..\VetCompassClient.net45\CodingSession.cs">
       <Link>CodingSession.cs</Link>
     </Compile>
