@@ -166,7 +166,8 @@ The msbuild files were altered using [Hanselman's method](http://www.hanselman.c
 ## How to publish the nuget package 
 
 * There is a nuget nuspec at clr/. Check the version & any new dependencies etc
-* Set sln to Release & platform to x86
-* Compile (this produces the dlls in the place that the nuspec expects)
+* Set sln to Release & platform to Any CPU
+* Compile 
+* Copy the .net 3.5 dlls from clr\VetCompassClient.net35\bin\Release\v3.5 to clr\lib\net35 (the .net 4.5 dlls are produced in the right folder already)
 * Create the .nupkg file. I used [the nuget gui](https://docs.nuget.org/create/using-a-gui-to-build-packages#nuget-package-explorer---gui-tool-for-building-packages)
 * Publish to nuget (File..Publish)
