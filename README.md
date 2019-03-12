@@ -140,7 +140,7 @@ Task<VeNomQueryResponse> futureResults = session.QueryAsync(new VeNomQuery("hit 
     * If your Start call timed out, you will need to create a new CodingSession
 * When your end-user has selected a code, remember to call RegisterSelection. The web service relies on these calls to learn the terms that your users use
 * In order to authenticate with the web services you will need to arrange a shared secret & clientId Guid with the VetCompass developers
-* Contact RVC to generate these details.  This is necessary in order to authenticate your client (which is done via [HMAC](http://www.thebuzzmedia.com/designing-a-secure-rest-api-without-oauth-authentication) )  It is possible to use the webservice without authenticating, but future functionality will only be available to authenticated users.
+* Contact RVC to generate these details.  This is necessary in order to authenticate your client (which is done via [HMAC](https://en.wikipedia.org/wiki/HMAC) )  It is possible to use the webservice without authenticating, but future functionality will only be available to authenticated users.
 * Prefer the asynchronous method in winforms/WPF application which will keep your UI responsive  
 * There is an example winforms project which shows how to synchronise back to the UI thread
 
