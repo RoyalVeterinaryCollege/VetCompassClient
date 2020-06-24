@@ -10,12 +10,12 @@ This client library is made available under the permissive [MIT licence](LICENSE
 ## A brief note on the web services
 The VetCompass web services support the process of [clinical coding](http://en.wikipedia.org/wiki/Clinical_coder) in the context of veterinary clinics. The web services make it easier for clinicians to find clinical codes because it has learned how vets refer to diseases.  Veterinary clinical concepts are described by different phrases which mean the same thing.  Also, vets use acronyms and frequently miss-type words. The web service knows how to map these references to their underlying meaning in the codes.  
 
-As at 9th June 2016: 
+As at 24th June 2020: 
 
-* 88% of sessions result in a code being selected 
-* The modal duration of a session is 1 second
-* The mean duration is 10 seconds
-* 95% of users find a code within 32 seconds
+* 96% of sessions result in a code being selected 
+* The modal duration of a session is 2 second
+* The median duration of a session is 3 seconds
+* 95% of users find a code within 23 seconds
 
 
 The web services uses the veterinary-specific [VeNom coding set](http://www.venomcoding.org/).  The web services are consumed by 3rd parties who want to enable clinical coding in their applications. Implementors take a user’s search input as a string, and send the string to the web service.  The web service sends back a list of codes which are most likely to be the codes that they are looking for.  The user chooses from this list, or gets a new list by amending their query.  The web service is fast; it is designed to be queried on each key-press and typically takes 12ms to process a query (total latency currently depends on your distance from Amazon's EU-West region)
